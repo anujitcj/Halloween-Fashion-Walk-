@@ -1,188 +1,166 @@
-/* === SAFE Minimal Halloween Theme (BLACK + ORANGE) ===
-   Replaces any problematic rules (removes pseudo-elements, images)
-   Sizes slightly increased for touch friendliness.
-*/
+/* === CLEAN HALLOWEEN THEME (Fixed Layout + Glow + No Blob) === */
 
-/* Colors */
-:root{
-  --bg: #0b0b0b;
-  --card: #0f0f10;
-  --muted: #bfbfbf;
+:root {
+  --bg: #0a0a0a;
   --accent: #ff6600;
-  --accent-2: #ff9b49;
-  --text: #ffffff;
+  --accent-light: #ffa64d;
+  --text: #fff;
+  --muted: #bbbbbb;
 }
 
-/* Base */
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family: Inter, "Poppins", system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background: linear-gradient(180deg,var(--bg) 0%, #0b0b0b 100%);
+/* Reset + Center */
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: "Poppins", sans-serif;
+  background: linear-gradient(180deg, #0b0b0b 0%, #1a1a1a 100%);
   color: var(--text);
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  min-height:100vh;
-  display:flex;
-  justify-content:center;
-  align-items:flex-start;
-  padding:32px 16px;
-  font-size: 17px; /* slightly larger base */
-  line-height:1.35;
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  min-height: 100vh;
+  padding: 2rem 1rem;
 }
 
-/* Container (center card) */
-.container{
-  width:100%;
-  max-width:760px;
-  margin:0 auto;
-  background: var(--card);
-  border-radius:14px;
-  padding:2.25rem;
-  box-shadow: 0 8px 40px rgba(0,0,0,0.6);
-  border: 1px solid rgba(255,255,255,0.02);
+/* Main Container */
+.container {
+  width: 90%;
+  max-width: 600px;
+  background: #111;
+  border: 1px solid rgba(255, 102, 0, 0.2);
+  border-radius: 16px;
+  padding: 2rem;
+  text-align: center;
+  box-shadow: 0 0 20px rgba(255, 102, 0, 0.1);
+  margin-top: 2rem;
 }
 
-/* Header / Title */
-h1{
-  margin:0 0 8px 0;
-  font-size:2rem;
-  color:var(--accent);
-  letter-spacing:0.2px;
-}
-.small-title{
-  color:var(--muted);
-  font-size:0.95rem;
-  margin-bottom:6px;
+/* Title */
+h1 {
+  color: var(--accent);
+  margin-bottom: 1rem;
+  font-size: 2rem;
+  text-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
 }
 
-/* Top action buttons */
-.buttons{
-  display:flex;
-  gap:12px;
-  margin:12px 0 20px;
-  flex-wrap:wrap;
-}
-button{
-  background: linear-gradient(180deg,var(--accent) 0%, var(--accent-2) 100%);
-  color:#111;
-  border:none;
-  padding:12px 22px;
-  border-radius:10px;
-  font-weight:700;
-  font-size:1rem;
-  cursor:pointer;
-  transition: transform .14s ease, box-shadow .14s ease;
-  box-shadow: 0 8px 20px rgba(255,102,0,0.08);
-  position:relative;
-  overflow:visible;
-}
-button:hover{ transform:translateY(-3px); box-shadow:0 12px 30px rgba(255,102,0,0.12); }
-button:active{ transform:translateY(-1px) }
-
-/* Force removal of any pseudo-elements that caused the eye */
-button::before, button::after { content: none !important; display: none !important; }
-
-/* Forms / cards */
-.card {
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border-radius:12px;
-  padding:18px;
-  margin-top:12px;
-  border: 1px solid rgba(255,255,255,0.02);
-}
-label{ display:block; color:var(--muted); font-size:0.95rem; margin-bottom:6px; }
-input[type="text"], input[type="email"], textarea {
-  width:100%;
-  padding:12px 14px;
-  border-radius:10px;
-  border:1px solid rgba(255,255,255,0.04);
-  background:rgba(0,0,0,0.18);
-  color:var(--text);
-  font-size:1rem;
-  outline:none;
-}
-input:focus, textarea:focus {
-  box-shadow: 0 8px 30px rgba(255,102,0,0.06);
-  border-color: rgba(255,102,0,0.18);
-}
-
-/* Hidden util */
-.hidden{ display:none; }
-
-/* Vote table (clear & centered) */
-.table-wrap{ overflow:auto; margin-top:10px; }
-.vote-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:6px;
-  font-size:1rem;
-}
-.vote-table thead th{
-  text-align:left;
-  padding:10px;
-  color:var(--muted);
-  font-weight:700;
-  border-bottom:1px solid rgba(255,255,255,0.03);
-}
-.vote-table tbody td{
-  padding:12px;
-  border-bottom:1px solid rgba(255,255,255,0.02);
-  vertical-align:middle;
-  color:var(--text);
-}
-.vote-table tbody tr:hover{
-  background: linear-gradient(90deg, rgba(255,102,0,0.03), transparent);
-}
-.vote-table td.vote-cell-radio{ text-align:center; }
-
-/* Radio styling: larger and colored to match theme */
-input[type="radio"]{
-  width:20px;
-  height:20px;
-  accent-color: var(--accent);
+/* Buttons */
+button {
+  background: linear-gradient(180deg, var(--accent), var(--accent-light));
+  border: none;
+  color: #111;
+  font-weight: 600;
+  padding: 12px 24px;
+  border-radius: 10px;
+  margin: 0.5rem;
   cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 0 12px rgba(255, 102, 0, 0.2);
+  position: relative;
 }
 
-/* Submit buttons inside cards: make them slightly larger and consistent */
-.form-actions{ margin-top:14px; display:flex; gap:12px; justify-content:flex-start; align-items:center; }
-.form-actions .btn-secondary{
-  background: transparent;
-  color: var(--muted);
-  border: 1px solid rgba(255,255,255,0.03);
-  padding:10px 18px;
-  border-radius:10px;
-  font-weight:600;
+/* Fix the weird "eye"/blob */
+button::before, button::after {
+  content: none !important;
+  display: none !important;
+}
+
+button:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
+}
+
+button:active {
+  transform: scale(0.98);
+}
+
+/* Inputs */
+input {
+  width: 90%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text);
+  font-size: 1rem;
+}
+
+input::placeholder {
+  color: #999;
+}
+
+input:focus {
+  border-color: var(--accent);
+  outline: none;
+  box-shadow: 0 0 10px rgba(255, 102, 0, 0.25);
+}
+
+/* Forms */
+.hidden {
+  display: none;
+}
+
+#registerForm, #voteForm, #leaderboard {
+  margin-top: 1.5rem;
+}
+
+/* Voting Table */
+#teamList {
+  display: table;
+  width: 100%;
+  margin-top: 1rem;
+  border-collapse: collapse;
+}
+
+#teamList tr {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+#teamList td {
+  padding: 12px;
+  text-align: left;
+  font-size: 1rem;
+}
+
+#teamList input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  accent-color: var(--accent);
+}
+
+/* Fix Submit + Back size */
+#submitVote,
+#voteBack {
+  width: 160px;
+  display: inline-block;
 }
 
 /* Messages */
-.msg{ margin-top:10px; color:var(--muted); font-size:0.95rem; }
+#registerMsg, #voteMsg {
+  margin-top: 10px;
+  font-size: 0.95rem;
+  color: var(--muted);
+}
 
 /* Leaderboard */
-.leaderboard-list{ list-style:none; padding-left:0; margin:0; display:block; }
-.leaderboard-list li{
-  padding:10px 12px;
-  border-radius:8px;
-  margin-bottom:8px;
-  background: rgba(255,255,255,0.01);
-  color:var(--text);
+#leaderList {
+  list-style: none;
+  padding: 0;
 }
 
-/* Footer subtle credit */
-.site-footer{
-  margin-top:18px;
-  text-align:center;
-  color:var(--muted);
-  font-size:0.85rem;
-  opacity:0.35; /* VERY subtle */
+#leaderList li {
+  background: rgba(255, 255, 255, 0.05);
+  margin: 8px 0;
+  padding: 10px;
+  border-radius: 8px;
 }
 
-/* Responsive tweaks */
-@media (max-width:720px){
-  .container{ padding:18px; width:95%; }
-  h1{ font-size:1.6rem; }
-  button{ padding:12px 18px; font-size:1rem; }
-  input[type="text"]{ padding:12px; }
-  .vote-table thead th, .vote-table tbody td{ padding:10px; font-size:0.98rem; }
+/* Footer credit (very subtle) */
+footer {
+  margin-top: 2rem;
+  text-align: center;
+  font-size: 0.85rem;
+  color: var(--muted);
+  opacity: 0.3;
 }
