@@ -1,8 +1,8 @@
-/* MODULE style Firebase v12 (browser) */
+/* ====== Firebase (v12 modular) ====== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, update, get, remove } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
-/* ====== Replace with your config (already set in your project) ====== */
+/* ====== Your Firebase Config ====== */
 const firebaseConfig = {
   apiKey: "AIzaSyCF-3Zu4tuhrrhH9PTx6-pfyJDLszRIqOk",
   authDomain: "halloween-fashion-walk.firebaseapp.com",
@@ -13,12 +13,12 @@ const firebaseConfig = {
   appId: "1:110631989563:web:b0317f8fe823507bd4071e",
   measurementId: "G-YWWSQ63KN5"
 };
-/* ================================================================== */
 
+/* ====== Init ====== */
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* Elements */
+/* ====== Elements ====== */
 const registerBtn = document.getElementById("registerBtn");
 const voteBtn = document.getElementById("voteBtn");
 const leaderboardBtn = document.getElementById("leaderboardBtn");
@@ -40,26 +40,25 @@ const boardBack = document.getElementById("boardBack");
 const registerMsg = document.getElementById("registerMsg");
 const voteMsg = document.getElementById("voteMsg");
 
-/* helper: show a single section */
-function showSection(section){
+/* ====== Section Toggler ====== */
+function showSection(section) {
   [registerForm, voteForm, leaderboard].forEach(s => s.classList.add("hidden"));
   section.classList.remove("hidden");
-  // clear messages
-  registerMsg && (registerMsg.textContent = "");
-  voteMsg && (voteMsg.textContent = "");
+  registerMsg.textContent = "";
+  voteMsg.textContent = "";
 }
 
-/* top buttons */
+/* ====== Top Navigation Buttons ====== */
 registerBtn.addEventListener("click", () => showSection(registerForm));
 voteBtn.addEventListener("click", async () => { showSection(voteForm); await loadTeams(); });
 leaderboardBtn.addEventListener("click", () => { showSection(leaderboard); loadLeaderboard(); });
 
-/* back buttons */
-regBack && regBack.addEventListener("click", () => location.reload());
-voteBack && voteBack.addEventListener("click", () => location.reload());
-boardBack && boardBack.addEventListener("click", () => location.reload());
+/* ====== Back Buttons ====== */
+regBack?.addEventListener("click", () => location.reload());
+voteBack?.addEventListener("click", () => location.reload());
+boardBack?.addEventListener("click", () => location.reload());
 
-/* ------- Registration logic (duplicate + double-click safe) ------- */
+/* ====== Registration ====== */
 submitRegisterBtn.addEventListener("click", async () => {
   submitRegisterBtn.disabled = true;
 
@@ -77,8 +76,9 @@ submitRegisterBtn.addEventListener("click", async () => {
   const snapshot = await get(teamsRef);
   const existing = snapshot.exists() ? Object.values(snapshot.val()) : [];
 
-  // Prevent duplicate names
-  const duplicate = existing.some(t => t.teamName && t.teamName.toLowerCase() === teamName.toLowerCase());
+  const duplicate = existing.some(
+    t => t.teamName && t.teamName.toLowerCase() === teamName.toLowerCase()
+  );
   if (duplicate) {
     registerMsg.textContent = "❌ This team name is already registered.";
     submitRegisterBtn.disabled = false;
@@ -103,25 +103,23 @@ submitRegisterBtn.addEventListener("click", async () => {
   setTimeout(() => { submitRegisterBtn.disabled = false; }, 1200);
 });
 
-/* ------- Load teams into styled table for voting ------- */
-async function loadTeams(){
+/* ====== Load Teams for Voting ====== */
+async function loadTeams() {
   teamListTbody.innerHTML = "";
   const teamsRef = ref(db, "teams");
   const snapshot = await get(teamsRef);
 
-  if (!snapshot.exists()){
+  if (!snapshot.exists()) {
     teamListTbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No teams registered yet.</td></tr>`;
     return;
   }
 
-  // convert to array and sort by teamNumber
   const data = snapshot.val();
   const rows = Object.entries(data).map(([key, val]) => ({ key, ...val }));
-  rows.sort((a,b) => (a.teamNumber||0) - (b.teamNumber||0));
+  rows.sort((a, b) => (a.teamNumber || 0) - (b.teamNumber || 0));
 
   rows.forEach(row => {
     const tr = document.createElement("tr");
-
     tr.innerHTML = `
       <td>${row.teamNumber ?? "-"}</td>
       <td>${escapeHtml(row.teamName)}</td>
@@ -132,13 +130,14 @@ async function loadTeams(){
   });
 }
 
+/* ====== Voting (1 per device) ====== */
 submitVoteBtn.addEventListener("click", async () => {
   voteMsg.textContent = "";
 
-  // 🚫 Check localStorage FIRST — block before anything happens
+  // 🛑 Stop repeat votes
   if (localStorage.getItem("hasVoted") === "true") {
     voteMsg.textContent = "⚠️ You have already voted from this device.";
-    return; // ✅ Stops here — no Firebase update
+    return;
   }
 
   const sel = document.querySelector('input[name="vote"]:checked');
@@ -154,7 +153,6 @@ submitVoteBtn.addEventListener("click", async () => {
   }
 
   try {
-    // ✅ Only runs once per device
     const teamRef = ref(db, `teams/${teamKey}`);
     const snap = await get(teamRef);
 
@@ -164,73 +162,57 @@ submitVoteBtn.addEventListener("click", async () => {
     }
 
     const current = snap.val().votes || 0;
-
-    // 🚀 Update Firebase
     await update(teamRef, { votes: current + 1 });
 
-    // 🧠 Mark as voted *immediately after successful update*
     localStorage.setItem("hasVoted", "true");
-
     voteMsg.textContent = "✅ Vote submitted successfully! You can’t vote again.";
     submitVoteBtn.disabled = true;
     document.querySelectorAll('input[name="vote"]').forEach(r => (r.disabled = true));
-
   } catch (err) {
     console.error("Vote error:", err);
     voteMsg.textContent = "❌ Something went wrong. Try again later.";
   }
 });
 
-
-  // Your existing Firebase vote submission code here...
-
-  localStorage.setItem("hasVoted", "true"); // mark as voted
-  alert("Vote submitted successfully! You cannot vote again.");
-});
-
-
-/* ------- Leaderboard (live) ------- */
-function loadLeaderboard(){
+/* ====== Leaderboard ====== */
+function loadLeaderboard() {
   leaderList.innerHTML = "";
   const teamsRef = ref(db, "teams");
   onValue(teamsRef, (snapshot) => {
     leaderList.innerHTML = "";
     if (!snapshot.exists()) {
-      leaderList.innerHTML = `<li style="color:var(--muted)">No teams yet.</li>`;
+      leaderList.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No teams yet.</td></tr>`;
       return;
     }
-    const data = snapshot.val();
-    const arr = Object.values(data).sort((a,b) => (b.votes||0) - (a.votes||0));
-   arr.forEach((t, i) => {
-  const tr = document.createElement("tr");
-  tr.innerHTML = `
-    <td>${i + 1}</td>
-    <td>${t.teamNumber}</td>
-    <td>${escapeHtml(t.teamName)}</td>
-    <td>${t.votes || 0}</td>
-  `;
-  leaderList.appendChild(tr);
-});
 
+    const data = snapshot.val();
+    const arr = Object.values(data).sort((a, b) => (b.votes || 0) - (a.votes || 0));
+
+    arr.forEach((t, i) => {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${t.teamNumber}</td>
+        <td>${escapeHtml(t.teamName)}</td>
+        <td>${t.votes || 0}</td>
+      `;
+      leaderList.appendChild(tr);
+    });
   });
 }
 
-/* ------- small util: escape HTML to avoid injected text from inputs ------- */
-function escapeHtml(unsafe){
+/* ====== Escape HTML ====== */
+function escapeHtml(unsafe) {
   if (!unsafe && unsafe !== 0) return "";
   return String(unsafe)
-    .replaceAll("&","&amp;")
-    .replaceAll("<","&lt;")
-    .replaceAll(">","&gt;")
-    .replaceAll('"',"&quot;")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 }
 
-/* Keep homepage minimal: hide cards at start */
+/* ====== Init ====== */
 document.addEventListener("DOMContentLoaded", () => {
-  showSection(document.querySelector('.card')?.classList.contains('hidden') ? registerForm : registerForm);
-  // initially hide all cards; user clicks top buttons to show
-  registerForm.classList.add('hidden');
-  voteForm.classList.add('hidden');
-  leaderboard.classList.add('hidden');
+  [registerForm, voteForm, leaderboard].forEach(s => s.classList.add("hidden"));
 });
