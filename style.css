@@ -1,150 +1,142 @@
-/* =========================
-   HALLOWEEN THEME STYLING
-   ========================= */
+/* 🎃 Halloween Theme – Clean, Minimal, and Scaled Up */
+:root {
+  --bg: #0b0b0b;
+  --orange: #ff6600;
+  --muted: #bbbbbb;
+  --white: #ffffff;
+}
+
 body {
-  font-family: 'Poppins', sans-serif;
-  background: radial-gradient(circle at top, #000000 0%, #1a1a1a 100%);
-  color: #fff;
+  font-family: "Poppins", sans-serif;
+  background-color: var(--bg);
+  color: var(--white);
+  margin: 0;
+  padding: 0;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
   align-items: center;
-  height: 100vh;
-  font-size: 18px;
-  overflow: hidden;
-  position: relative;
+  justify-content: flex-start;
+  min-height: 100vh;
+  font-size: 1.15rem;
 }
 
-/* Container */
-.container {
-  width: 95%;
-  max-width: 650px;
-  text-align: center;
-  background: #111;
-  padding: 3rem;
-  border-radius: 20px;
-  box-shadow: 0 0 25px rgba(255, 140, 0, 0.3);
-  color: #fff;
-  transition: all 0.3s ease-in-out;
-  z-index: 2;
-}
-
+/* HEADER */
 h1 {
-  color: #ff6600;
-  font-size: 2.2rem;
-  margin-bottom: 1.5rem;
-  text-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
+  font-size: 2.5rem;
+  margin: 24px 0 8px;
+  color: var(--orange);
+  text-align: center;
 }
 
 h2 {
-  color: #ff8800;
-  margin-bottom: 1rem;
-  text-shadow: 0 0 10px rgba(255, 140, 0, 0.4);
+  font-size: 1.6rem;
+  margin-bottom: 12px;
+  color: var(--orange);
 }
 
-/* Buttons */
+/* NAV BUTTONS */
+.top-buttons {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 30px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
 button {
-  padding: 16px 28px;
+  background-color: var(--orange);
+  color: var(--white);
   border: none;
+  padding: 14px 26px;
+  font-size: 1.15rem;
   border-radius: 12px;
-  background-color: #ff6600;
-  color: #fff;
-  margin: 10px;
   cursor: pointer;
-  font-size: 1.1rem;
   font-weight: 600;
-  letter-spacing: 0.5px;
-  transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
+  transition: all 0.25s ease-in-out;
 }
 
 button:hover {
-  background-color: #ff8800;
   transform: scale(1.08);
-  box-shadow: 0 0 20px rgba(255, 140, 0, 0.5);
+  box-shadow: 0 0 20px var(--orange);
 }
 
-/* Inputs */
-input {
-  width: 95%;
-  padding: 14px;
-  margin: 12px 0;
+/* Remove any weird pseudo-element “eyes” */
+button::before,
+button::after {
+  content: none !important;
+}
+
+/* FORMS & CARDS */
+.card {
+  background-color: #141414;
+  border-radius: 18px;
+  padding: 32px 42px;
+  max-width: 640px;
+  width: 90%;
+  box-shadow: 0 0 20px rgba(255, 102, 0, 0.25);
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+input[type="text"] {
+  width: 90%;
+  padding: 12px;
+  margin: 10px 0;
+  font-size: 1.1rem;
   border-radius: 10px;
-  border: 2px solid #ff6600;
-  font-size: 1rem;
-  background: #222;
-  color: #fff;
-  outline: none;
-  transition: 0.3s ease;
+  border: 1px solid #555;
+  background: #1c1c1c;
+  color: var(--white);
 }
 
-input::placeholder {
-  color: #ccc;
+label {
+  font-size: 1.1rem;
+  display: block;
+  margin-top: 8px;
 }
 
-input:focus {
-  border-color: #ff8800;
-  box-shadow: 0 0 10px rgba(255, 140, 0, 0.3);
-}
-
-/* Hidden Sections */
 .hidden {
   display: none;
 }
 
-/* Vote Table */
+/* TABLE (Voting list) */
 .vote-table {
   width: 100%;
   border-collapse: collapse;
-  margin-top: 12px;
-  font-size: 1rem;
-}
-
-.vote-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 20px;
-  font-size: 1.05rem;
+  margin-top: 18px;
 }
 
 .vote-table th,
 .vote-table td {
-  padding: 16px;
-  border-bottom: 1px solid #333;
+  border: 1px solid #333;
+  padding: 14px 10px;
   text-align: center;
-  vertical-align: middle;
+  font-size: 1.1rem;
 }
 
 .vote-table th {
-  color: #ff8800;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  background: #1a1a1a;
+  color: var(--orange);
 }
 
-.vote-table input[type="radio"] {
-  width: 22px;
-  height: 22px;
-  accent-color: #ff6600;
+.vote-cell-radio input[type="radio"] {
+  transform: scale(1.5);
   cursor: pointer;
 }
 
-.vote-table tr:hover {
-  background-color: rgba(255, 102, 0, 0.1);
-  transition: background 0.3s;
+/* FEEDBACK MSGS */
+#registerMsg,
+#voteMsg {
+  margin-top: 12px;
+  font-weight: 500;
+  color: var(--orange);
 }
 
-
-/* Footer */
-footer {
-  margin-top: 30px;
-  font-size: 0.8rem;
-  color: #aaa;
-}
-
-footer a {
-  color: #ff6600;
-  text-decoration: none;
-}
-
-footer a:hover {
-  text-decoration: underline;
+/* FOOTER NOTE */
+.footer-note {
+  margin-top: 40px;
+  color: var(--muted);
+  font-size: 0.9rem;
+  opacity: 0.5;
+  text-align: center;
 }
