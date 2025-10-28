@@ -14,43 +14,6 @@ body {
   position: relative;
 }
 
-/* 🦇 BAT ANIMATION */
-.bat {
-  position: absolute;
-  width: 60px;
-  height: 30px;
-  background: url('https://cdn-icons-png.flaticon.com/512/616/616408.png') no-repeat center/contain;
-  top: 15%;
-  animation: fly 10s linear infinite;
-  opacity: 0.9;
-  z-index: 1000;
-}
-
-@keyframes fly {
-  0% {
-    left: -80px;
-    top: 20%;
-    transform: scale(1) rotate(0deg);
-  }
-  25% {
-    top: 15%;
-    transform: scale(1.1) rotate(10deg);
-  }
-  50% {
-    top: 10%;
-    transform: scale(1.2) rotate(-10deg);
-  }
-  75% {
-    top: 18%;
-    transform: scale(1.1) rotate(5deg);
-  }
-  100% {
-    left: 110%;
-    top: 20%;
-    transform: scale(1) rotate(0deg);
-  }
-}
-
 /* Container */
 .container {
   width: 95%;
