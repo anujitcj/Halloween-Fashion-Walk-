@@ -65,41 +65,35 @@
           </table>
         </div>
         <div class="form-actions">
-  <button id="submitVote" class="btn btn-primary">Submit Vote</button>
-  <button id="voteBack" class="btn btn-ghost">Back</button>
-</div>
-
+          <button id="submitVote" class="btn btn-primary">Submit Vote</button>
+          <button id="voteBack" class="btn btn-ghost">Back</button>
+        </div>
         <p id="voteMsg" class="msg"></p>
       </div>
 
       <!-- Leaderboard -->
-    <!-- Leaderboard -->
-<div id="leaderboard" class="hidden">
-  <h2>Live Leaderboard</h2>
-  <table class="leader-table">
-    <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Team No.</th>
-        <th>Team Name</th>
-        <th>Votes</th>
-      </tr>
-    </thead>
-    <tbody id="leaderList"></tbody>
-  </table>
-</div>
-
+      <div id="leaderboard" class="card hidden">
+        <h2>Live Leaderboard</h2>
+        <table class="leader-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Team No.</th>
+              <th>Team Name</th>
+              <th>Votes</th>
+            </tr>
+          </thead>
+          <tbody id="leaderList"></tbody>
+        </table>
+      </div>
     </section>
 
     <footer class="site-footer">
-  </footer>
+      Website developed & managed by 
+      <a href="https://github.com/anujitcj" target="_blank">Anujit Joglekar</a>
+    </footer>
   </main>
 
-  <!-- Module JS (Firebase imports inside) -->
   <script type="module" src="script.js"></script>
-  <footer class="site-footer">
-  Website developed & managed by <a href="https://github.com/anujitcj" target="_blank">Anujit Joglekar</a>
-</footer>
-
 </body>
 </html>
