@@ -233,4 +233,7 @@ h1 {
   color: var(--accent);
   text-shadow: 0 0 5px var(--accent);
 }
+.hidden {
+  display: none !important;
+}
 
