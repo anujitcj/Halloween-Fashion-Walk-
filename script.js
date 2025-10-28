@@ -154,6 +154,35 @@ submitVoteBtn.addEventListener("click", async () => {
 
   voteMsg.textContent = "✅ Vote submitted. Thank you!";
 });
+// === Prevent multiple votes per user ===
+const hasVoted = localStorage.getItem("hasVoted");
+
+if (hasVoted) {
+  const voteSection = document.getElementById("voteForm");
+  if (voteSection) {
+    voteSection.innerHTML = `
+      <h2>You've already voted!</h2>
+      <p style="color: var(--accent); font-weight: bold;">
+        Thank you for participating in the Halloween Carnival Voting 🎃
+      </p>
+    `;
+  }
+}
+
+document.getElementById("submitVote")?.addEventListener("click", (e) => {
+  e.preventDefault();
+
+  if (localStorage.getItem("hasVoted")) {
+    alert("You have already voted once. Thank you!");
+    return;
+  }
+
+  // Your existing Firebase vote submission code here...
+
+  localStorage.setItem("hasVoted", "true"); // mark as voted
+  alert("Vote submitted successfully! You cannot vote again.");
+});
+
 
 /* ------- Leaderboard (live) ------- */
 function loadLeaderboard(){
