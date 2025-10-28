@@ -1,6 +1,6 @@
 /* ====== Firebase (v12 modular) ====== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, update, get, set } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
 /* ====== Firebase Config ====== */
 const firebaseConfig = {
@@ -27,7 +27,7 @@ const registerForm = document.getElementById("registerForm");
 const voteForm = document.getElementById("voteForm");
 const leaderboard = document.getElementById("leaderboard");
 
-const participantListTbody = document.getElementById("participantList");
+const teamListTbody = document.getElementById("teamList");
 const leaderList = document.getElementById("leaderList");
 
 const submitRegisterBtn = document.getElementById("submitRegister");
@@ -47,16 +47,16 @@ function showSection(section) {
   voteMsg.textContent = "";
 }
 
-/* ====== Top Buttons ====== */
+/* ====== Navigation ====== */
 registerBtn.addEventListener("click", () => showSection(registerForm));
-voteBtn.addEventListener("click", async () => { showSection(voteForm); await loadParticipants(); });
+voteBtn.addEventListener("click", async () => { showSection(voteForm); await loadTeams(); });
 leaderboardBtn.addEventListener("click", () => { showSection(leaderboard); loadLeaderboard(); });
 
 /* ====== Back Buttons ====== */
 regBack?.addEventListener("click", () => location.reload());
 voteBack?.addEventListener("click", () => location.reload());
 
-/* ====== Registration ====== */
+/* ====== Registration (Solo Event) ====== */
 submitRegisterBtn.addEventListener("click", async () => {
   submitRegisterBtn.disabled = true;
 
@@ -69,43 +69,47 @@ submitRegisterBtn.addEventListener("click", async () => {
     return;
   }
 
-  const participantsRef = ref(db, "participants");
-  const snapshot = await get(participantsRef);
+  const teamsRef = ref(db, "participants");
+  const snapshot = await get(teamsRef);
   const existing = snapshot.exists() ? Object.values(snapshot.val()) : [];
+  const duplicate = existing.some(t => t.name && t.name.toLowerCase() === name.toLowerCase());
 
-  // Auto-generate registration number: 001, 002, etc.
-  const participantNumber = existing.length + 1;
-  const regNumber = participantNumber.toString().padStart(3, "0");
+  if (duplicate) {
+    registerMsg.textContent = "❌ This name is already registered.";
+    submitRegisterBtn.disabled = false;
+    return;
+  }
 
-  await push(participantsRef, {
+  const regNumber = String(existing.length + 1).padStart(3, "0");
+
+  await push(teamsRef, {
     name,
     classSection,
     regNumber,
-    participantNumber,
     votes: 0
   });
 
-  registerMsg.textContent = `✅ Registered successfully! Your ID is ${regNumber}`;
+  registerMsg.textContent = `✅ Registered successfully. Your Reg No: ${regNumber}`;
   document.getElementById("participantName").value = "";
   document.getElementById("classSection").value = "";
 
   setTimeout(() => { submitRegisterBtn.disabled = false; }, 1200);
 });
 
-/* ====== Load Participants ====== */
-async function loadParticipants() {
-  participantListTbody.innerHTML = "";
-  const participantsRef = ref(db, "participants");
-  const snapshot = await get(participantsRef);
+/* ====== Load Participants for Voting ====== */
+async function loadTeams() {
+  teamListTbody.innerHTML = "";
+  const teamsRef = ref(db, "participants");
+  const snapshot = await get(teamsRef);
 
   if (!snapshot.exists()) {
-    participantListTbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No participants registered yet.</td></tr>`;
+    teamListTbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No participants yet.</td></tr>`;
     return;
   }
 
   const data = snapshot.val();
   const rows = Object.entries(data).map(([key, val]) => ({ key, ...val }));
-  rows.sort((a, b) => (a.participantNumber || 0) - (b.participantNumber || 0));
+  rows.sort((a, b) => (a.regNumber || 0) - (b.regNumber || 0));
 
   rows.forEach(row => {
     const tr = document.createElement("tr");
@@ -115,13 +119,26 @@ async function loadParticipants() {
       <td>${escapeHtml(row.classSection)}</td>
       <td class="vote-cell-radio"><input type="radio" name="vote" value="${row.regNumber}" data-key="${row.key}"></td>
     `;
-    participantListTbody.appendChild(tr);
+    teamListTbody.appendChild(tr);
   });
+}
+
+/* ====== Global Reset Sync ====== */
+async function checkGlobalReset() {
+  const settingsRef = ref(db, "settings/resetVersion");
+  const snapshot = await get(settingsRef);
+  const globalVersion = snapshot.exists() ? snapshot.val() : 1;
+  const localVersion = localStorage.getItem("votedVersion") || 0;
+
+  if (parseInt(localVersion) !== parseInt(globalVersion)) {
+    localStorage.removeItem("hasVoted");
+    localStorage.setItem("votedVersion", globalVersion);
+  }
 }
 
 /* ====== Voting ====== */
 submitVoteBtn.addEventListener("click", async () => {
-  voteMsg.textContent = "";
+  await checkGlobalReset();
 
   if (localStorage.getItem("hasVoted") === "true") {
     voteMsg.textContent = "⚠️ You have already voted from this device.";
@@ -134,39 +151,38 @@ submitVoteBtn.addEventListener("click", async () => {
     return;
   }
 
-  const participantKey = sel.getAttribute("data-key");
-  if (!participantKey) {
-    voteMsg.textContent = "⚠️ Invalid selection. Try again.";
+  const key = sel.getAttribute("data-key");
+  if (!key) {
+    voteMsg.textContent = "⚠️ Invalid selection.";
     return;
   }
 
   try {
-    const participantRef = ref(db, `participants/${participantKey}`);
-    const snap = await get(participantRef);
-
+    const refPath = ref(db, `participants/${key}`);
+    const snap = await get(refPath);
     if (!snap.exists()) {
-      voteMsg.textContent = "⚠️ Participant not found. Try again.";
+      voteMsg.textContent = "⚠️ Participant not found.";
       return;
     }
 
     const current = snap.val().votes || 0;
-    await update(participantRef, { votes: current + 1 });
+    await update(refPath, { votes: current + 1 });
 
     localStorage.setItem("hasVoted", "true");
-    voteMsg.textContent = "✅ Vote submitted successfully! You can’t vote again.";
+    voteMsg.textContent = "✅ Vote submitted successfully!";
     submitVoteBtn.disabled = true;
     document.querySelectorAll('input[name="vote"]').forEach(r => (r.disabled = true));
   } catch (err) {
     console.error("Vote error:", err);
-    voteMsg.textContent = "❌ Something went wrong. Try again later.";
+    voteMsg.textContent = "❌ Something went wrong.";
   }
 });
 
 /* ====== Leaderboard ====== */
 function loadLeaderboard() {
   leaderList.innerHTML = "";
-  const participantsRef = ref(db, "participants");
-  onValue(participantsRef, (snapshot) => {
+  const refPath = ref(db, "participants");
+  onValue(refPath, (snapshot) => {
     leaderList.innerHTML = "";
     if (!snapshot.exists()) {
       leaderList.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No participants yet.</td></tr>`;
@@ -176,13 +192,13 @@ function loadLeaderboard() {
     const data = snapshot.val();
     const arr = Object.values(data).sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
-    arr.forEach((p, i) => {
+    arr.forEach((t, i) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
-        <td>${p.regNumber}</td>
-        <td>${escapeHtml(p.name)}</td>
-        <td>${p.votes || 0}</td>
+        <td>${t.regNumber}</td>
+        <td>${escapeHtml(t.name)}</td>
+        <td>${t.votes || 0}</td>
       `;
       leaderList.appendChild(tr);
     });
@@ -190,30 +206,37 @@ function loadLeaderboard() {
 }
 
 /* ====== Escape HTML ====== */
-function escapeHtml(unsafe) {
-  if (!unsafe && unsafe !== 0) return "";
-  return String(unsafe)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
+function escapeHtml(str) {
+  if (!str) return "";
+  return str.replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#039;"
+  })[m]);
 }
 
-/* ====== Admin Reset Local Vote Lock ====== */
+/* ====== Admin Global Reset ====== */
 const adminPanel = document.getElementById("adminPanel");
-const resetBtn = document.getElementById("resetVotes");
+const resetGlobalVotes = document.getElementById("resetGlobalVotes");
 
-// Toggle admin panel with Ctrl+Shift+A
+// Toggle Admin with Ctrl + Shift + A
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a") {
     adminPanel.classList.toggle("hidden");
-    console.log(adminPanel.classList.contains("hidden") ? "🔒 Admin hidden" : "🟢 Admin shown");
   }
 });
 
-// Reset localStorage flag
-resetBtn?.addEventListener("click", () => {
-  localStorage.removeItem("hasVoted");
-  alert("✅ Local vote lock cleared. You can vote again from this device.");
+// Global Reset Button
+resetGlobalVotes?.addEventListener("click", async () => {
+  const settingsRef = ref(db, "settings/resetVersion");
+  const snapshot = await get(settingsRef);
+  const currentVersion = snapshot.exists() ? snapshot.val() : 1;
+  const newVersion = currentVersion + 1;
+
+  await set(settingsRef, newVersion);
+  alert(`✅ Global vote lock reset! Version updated to ${newVersion}`);
+});
+
+/* ====== Init ====== */
+document.addEventListener("DOMContentLoaded", async () => {
+  await checkGlobalReset();
+  [registerForm, voteForm, leaderboard].forEach(s => s.classList.add("hidden"));
 });
