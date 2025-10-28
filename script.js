@@ -2,7 +2,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
-/* ====== Your Firebase Config ====== */
+/* ====== Firebase Config ====== */
 const firebaseConfig = {
   apiKey: "AIzaSyCF-3Zu4tuhrrhH9PTx6-pfyJDLszRIqOk",
   authDomain: "halloween-fashion-walk.firebaseapp.com",
@@ -27,7 +27,7 @@ const registerForm = document.getElementById("registerForm");
 const voteForm = document.getElementById("voteForm");
 const leaderboard = document.getElementById("leaderboard");
 
-const teamListTbody = document.getElementById("teamList");
+const participantListTbody = document.getElementById("participantList");
 const leaderList = document.getElementById("leaderList");
 
 const submitRegisterBtn = document.getElementById("submitRegister");
@@ -35,12 +35,11 @@ const submitVoteBtn = document.getElementById("submitVote");
 
 const regBack = document.getElementById("regBack");
 const voteBack = document.getElementById("voteBack");
-const boardBack = document.getElementById("boardBack");
 
 const registerMsg = document.getElementById("registerMsg");
 const voteMsg = document.getElementById("voteMsg");
 
-/* ====== Section Toggler ====== */
+/* ====== Section Toggle ====== */
 function showSection(section) {
   [registerForm, voteForm, leaderboard].forEach(s => s.classList.add("hidden"));
   section.classList.remove("hidden");
@@ -48,93 +47,86 @@ function showSection(section) {
   voteMsg.textContent = "";
 }
 
-/* ====== Top Navigation Buttons ====== */
+/* ====== Top Buttons ====== */
 registerBtn.addEventListener("click", () => showSection(registerForm));
-voteBtn.addEventListener("click", async () => { showSection(voteForm); await loadTeams(); });
+voteBtn.addEventListener("click", async () => { showSection(voteForm); await loadParticipants(); });
 leaderboardBtn.addEventListener("click", () => { showSection(leaderboard); loadLeaderboard(); });
 
 /* ====== Back Buttons ====== */
 regBack?.addEventListener("click", () => location.reload());
 voteBack?.addEventListener("click", () => location.reload());
-boardBack?.addEventListener("click", () => location.reload());
 
 /* ====== Registration ====== */
 submitRegisterBtn.addEventListener("click", async () => {
   submitRegisterBtn.disabled = true;
 
-  const teamName = document.getElementById("teamName").value.trim();
-  const leaderName = document.getElementById("leaderName").value.trim();
-  const classSection = document.getElementById("classSection").value.trim();
+  const name = document.getElementById("participantName").value.trim();
+  const regNumber = document.getElementById("regNumber").value.trim();
 
-  if (!teamName || !leaderName || !classSection) {
+  if (!name || !regNumber) {
     registerMsg.textContent = "⚠️ Please fill all fields.";
     submitRegisterBtn.disabled = false;
     return;
   }
 
-  const teamsRef = ref(db, "teams");
-  const snapshot = await get(teamsRef);
+  const participantsRef = ref(db, "participants");
+  const snapshot = await get(participantsRef);
   const existing = snapshot.exists() ? Object.values(snapshot.val()) : [];
 
-  const duplicate = existing.some(
-    t => t.teamName && t.teamName.toLowerCase() === teamName.toLowerCase()
-  );
+  const duplicate = existing.some(p => p.regNumber && p.regNumber.toLowerCase() === regNumber.toLowerCase());
   if (duplicate) {
-    registerMsg.textContent = "❌ This team name is already registered.";
+    registerMsg.textContent = "❌ This registration number is already used.";
     submitRegisterBtn.disabled = false;
     return;
   }
 
-  const teamNumber = existing.length + 1;
+  const participantNumber = existing.length + 1;
 
-  await push(teamsRef, {
-    teamName,
-    leaderName,
-    classSection,
-    teamNumber,
+  await push(participantsRef, {
+    name,
+    regNumber,
+    participantNumber,
     votes: 0
   });
 
-  registerMsg.textContent = `✅ Registered. Team No ${teamNumber}`;
-  document.getElementById("teamName").value = "";
-  document.getElementById("leaderName").value = "";
-  document.getElementById("classSection").value = "";
+  registerMsg.textContent = `✅ Registered successfully. Participant No ${participantNumber}`;
+  document.getElementById("participantName").value = "";
+  document.getElementById("regNumber").value = "";
 
   setTimeout(() => { submitRegisterBtn.disabled = false; }, 1200);
 });
 
-/* ====== Load Teams for Voting ====== */
-async function loadTeams() {
-  teamListTbody.innerHTML = "";
-  const teamsRef = ref(db, "teams");
-  const snapshot = await get(teamsRef);
+/* ====== Load Participants ====== */
+async function loadParticipants() {
+  participantListTbody.innerHTML = "";
+  const participantsRef = ref(db, "participants");
+  const snapshot = await get(participantsRef);
 
   if (!snapshot.exists()) {
-    teamListTbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No teams registered yet.</td></tr>`;
+    participantListTbody.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No participants registered yet.</td></tr>`;
     return;
   }
 
   const data = snapshot.val();
   const rows = Object.entries(data).map(([key, val]) => ({ key, ...val }));
-  rows.sort((a, b) => (a.teamNumber || 0) - (b.teamNumber || 0));
+  rows.sort((a, b) => (a.participantNumber || 0) - (b.participantNumber || 0));
 
   rows.forEach(row => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${row.teamNumber ?? "-"}</td>
-      <td>${escapeHtml(row.teamName)}</td>
-      <td>${escapeHtml(row.leaderName)} <span style="color:var(--muted)">(${escapeHtml(row.classSection)})</span></td>
-      <td class="vote-cell-radio"><input type="radio" name="vote" value="${row.teamNumber}" data-key="${row.key}"></td>
+      <td>${row.participantNumber ?? "-"}</td>
+      <td>${escapeHtml(row.name)}</td>
+      <td>${escapeHtml(row.regNumber)}</td>
+      <td class="vote-cell-radio"><input type="radio" name="vote" value="${row.participantNumber}" data-key="${row.key}"></td>
     `;
-    teamListTbody.appendChild(tr);
+    participantListTbody.appendChild(tr);
   });
 }
 
-/* ====== Voting (1 per device) ====== */
+/* ====== Voting ====== */
 submitVoteBtn.addEventListener("click", async () => {
   voteMsg.textContent = "";
 
-  // 🛑 Stop repeat votes
   if (localStorage.getItem("hasVoted") === "true") {
     voteMsg.textContent = "⚠️ You have already voted from this device.";
     return;
@@ -142,27 +134,27 @@ submitVoteBtn.addEventListener("click", async () => {
 
   const sel = document.querySelector('input[name="vote"]:checked');
   if (!sel) {
-    voteMsg.textContent = "⚠️ Please select a team first.";
+    voteMsg.textContent = "⚠️ Please select a participant first.";
     return;
   }
 
-  const teamKey = sel.getAttribute("data-key");
-  if (!teamKey) {
+  const participantKey = sel.getAttribute("data-key");
+  if (!participantKey) {
     voteMsg.textContent = "⚠️ Invalid selection. Try again.";
     return;
   }
 
   try {
-    const teamRef = ref(db, `teams/${teamKey}`);
-    const snap = await get(teamRef);
+    const participantRef = ref(db, `participants/${participantKey}`);
+    const snap = await get(participantRef);
 
     if (!snap.exists()) {
-      voteMsg.textContent = "⚠️ Team not found. Try again.";
+      voteMsg.textContent = "⚠️ Participant not found. Try again.";
       return;
     }
 
     const current = snap.val().votes || 0;
-    await update(teamRef, { votes: current + 1 });
+    await update(participantRef, { votes: current + 1 });
 
     localStorage.setItem("hasVoted", "true");
     voteMsg.textContent = "✅ Vote submitted successfully! You can’t vote again.";
@@ -177,24 +169,24 @@ submitVoteBtn.addEventListener("click", async () => {
 /* ====== Leaderboard ====== */
 function loadLeaderboard() {
   leaderList.innerHTML = "";
-  const teamsRef = ref(db, "teams");
-  onValue(teamsRef, (snapshot) => {
+  const participantsRef = ref(db, "participants");
+  onValue(participantsRef, (snapshot) => {
     leaderList.innerHTML = "";
     if (!snapshot.exists()) {
-      leaderList.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No teams yet.</td></tr>`;
+      leaderList.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No participants yet.</td></tr>`;
       return;
     }
 
     const data = snapshot.val();
     const arr = Object.values(data).sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
-    arr.forEach((t, i) => {
+    arr.forEach((p, i) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
-        <td>${t.teamNumber}</td>
-        <td>${escapeHtml(t.teamName)}</td>
-        <td>${t.votes || 0}</td>
+        <td>${p.participantNumber}</td>
+        <td>${escapeHtml(p.name)}</td>
+        <td>${p.votes || 0}</td>
       `;
       leaderList.appendChild(tr);
     });
@@ -212,19 +204,15 @@ function escapeHtml(unsafe) {
     .replaceAll("'", "&#039;");
 }
 
-/* ====== Init ====== */
-document.addEventListener("DOMContentLoaded", () => {
-  [registerForm, voteForm, leaderboard].forEach(s => s.classList.add("hidden"));
-});
-/* ===== Admin toggle for resetting local vote lock ===== */
+/* ====== Admin Reset Local Vote Lock ====== */
 const adminPanel = document.getElementById("adminPanel");
 const resetBtn = document.getElementById("resetVotes");
 
-// Toggle visibility with Ctrl + Shift + A
+// Toggle admin panel with Ctrl+Shift+A
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a") {
     adminPanel.classList.toggle("hidden");
-    console.log(adminPanel.classList.contains("hidden") ? "🔒 Admin panel hidden" : "🟢 Admin panel shown");
+    console.log(adminPanel.classList.contains("hidden") ? "🔒 Admin hidden" : "🟢 Admin shown");
   }
 });
 
@@ -233,4 +221,3 @@ resetBtn?.addEventListener("click", () => {
   localStorage.removeItem("hasVoted");
   alert("✅ Local vote lock cleared. You can vote again from this device.");
 });
-
