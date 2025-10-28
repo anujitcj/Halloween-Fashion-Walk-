@@ -214,3 +214,23 @@ h1 {
 .leader-table tr:hover {
   background: rgba(255,165,0,0.2);
 }
+/* ====== Footer Signature ====== */
+.site-footer {
+  text-align: center;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.25);
+  margin-top: 40px;
+  padding-bottom: 10px;
+  user-select: none;
+}
+
+.site-footer a {
+  color: rgba(255, 255, 255, 0.3);
+  text-decoration: none;
+}
+
+.site-footer a:hover {
+  color: var(--accent);
+  text-shadow: 0 0 5px var(--accent);
+}
+
