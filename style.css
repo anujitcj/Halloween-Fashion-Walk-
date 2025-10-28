@@ -98,16 +98,40 @@ input:focus {
   font-size: 1rem;
 }
 
+.vote-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+  font-size: 1.05rem;
+}
+
 .vote-table th,
 .vote-table td {
-  padding: 14px;
+  padding: 16px;
   border-bottom: 1px solid #333;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.vote-table th {
+  color: #ff8800;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.vote-table input[type="radio"] {
+  width: 22px;
+  height: 22px;
+  accent-color: #ff6600;
+  cursor: pointer;
 }
 
 .vote-table tr:hover {
   background-color: rgba(255, 102, 0, 0.1);
   transition: background 0.3s;
 }
+
 
 /* Footer */
 footer {
