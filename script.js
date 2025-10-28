@@ -1,8 +1,8 @@
-// Import Firebase SDKs
+// --- IMPORT FIREBASE MODULES ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getDatabase, ref, push, set, onValue, update } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
-// Firebase configuration
+// --- FIREBASE CONFIG ---
 const firebaseConfig = {
   apiKey: "AIzaSyCF-3Zu4tuhrrhH9PTx6-pfyJDLszRIqOk",
   authDomain: "halloween-fashion-walk.firebaseapp.com",
@@ -14,100 +14,132 @@ const firebaseConfig = {
   measurementId: "G-YWWSQ63KN5"
 };
 
-// Initialize Firebase
+// --- INITIALIZE FIREBASE ---
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// ----------- REGISTRATION -----------
-const registerBtn = document.getElementById("register-btn");
-const voteBtn = document.getElementById("vote-btn");
-const leaderboardBtn = document.getElementById("leaderboard-btn");
+// --- MAIN FUNCTION (run after page loads) ---
+document.addEventListener("DOMContentLoaded", () => {
 
-if (registerBtn) {
-  registerBtn.addEventListener("click", showRegistrationForm);
-}
+  // Grab the buttons from index.html
+  const registerBtn = document.getElementById("register-btn");
+  const voteBtn = document.getElementById("vote-btn");
+  const leaderboardBtn = document.getElementById("leaderboard-btn");
 
-function showRegistrationForm() {
-  document.body.innerHTML = `
-    <h2>Register Your Team</h2>
-    <form id="regForm">
-      <input placeholder="Team Name" id="teamName" required><br>
-      <input placeholder="Team Leader's Name" id="leaderName" required><br>
-      <input placeholder="Class & Section" id="classSection" required><br>
-      <button type="submit">Submit</button>
-    </form>
-    <p id="message"></p>
-  `;
+  // ============ REGISTRATION ============
+  if (registerBtn) {
+    registerBtn.addEventListener("click", showRegistrationForm);
+  }
 
-  document.getElementById("regForm").addEventListener("submit", async (e) => {
-    e.preventDefault();
+  function showRegistrationForm() {
+    document.body.innerHTML = `
+      <h2>Register Your Team</h2>
+      <form id="regForm">
+        <input placeholder="Team Name" id="teamName" required><br>
+        <input placeholder="Team Leader's Name" id="leaderName" required><br>
+        <input placeholder="Class & Section" id="classSection" required><br>
+        <button type="submit">Submit</button>
+      </form>
+      <p id="message"></p>
+      <button id="backBtn">⬅️ Back</button>
+    `;
 
-    const teamName = document.getElementById("teamName").value;
-    const leaderName = document.getElementById("leaderName").value;
-    const classSection = document.getElementById("classSection").value;
+    document.getElementById("backBtn").addEventListener("click", () => location.reload());
 
-    const teamRef = push(ref(db, "teams"));
-    await set(teamRef, {
-      teamName,
-      leaderName,
-      classSection,
-      votes: 0
+    document.getElementById("regForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const teamName = document.getElementById("teamName").value.trim();
+      const leaderName = document.getElementById("leaderName").value.trim();
+      const classSection = document.getElementById("classSection").value.trim();
+
+      if (!teamName || !leaderName || !classSection) {
+        document.getElementById("message").innerText = "⚠️ Please fill all fields.";
+        return;
+      }
+
+      const teamRef = push(ref(db, "teams"));
+      await set(teamRef, {
+        teamName,
+        leaderName,
+        classSection,
+        votes: 0
+      });
+
+      document.getElementById("message").innerText = `✅ Registered successfully!`;
     });
+  }
 
-    const teamNumber = teamRef.key.slice(-2).toUpperCase();
-    document.getElementById("message").innerText = `✅ Registered successfully as Team ${teamNumber}`;
-  });
-}
+  // ============ VOTING ============
+  if (voteBtn) {
+    voteBtn.addEventListener("click", showVotingPage);
+  }
 
-// ----------- VOTING -----------
-if (voteBtn) {
-  voteBtn.addEventListener("click", showVotingPage);
-}
+  function showVotingPage() {
+    document.body.innerHTML = `<h2>Vote for Your Favorite Team</h2><div id="teams"></div><p id="message"></p><button id="backBtn">⬅️ Back</button>`;
+    document.getElementById("backBtn").addEventListener("click", () => location.reload());
 
-function showVotingPage() {
-  document.body.innerHTML = `<h2>Vote for Your Favorite Team</h2><div id="teams"></div><p id="message"></p>`;
+    const teamsRef = ref(db, "teams");
+    onValue(teamsRef, (snapshot) => {
+      const data = snapshot.val();
+      const container = document.getElementById("teams");
+      container.innerHTML = "";
 
-  const teamsRef = ref(db, "teams");
-  onValue(teamsRef, (snapshot) => {
-    const data = snapshot.val();
-    const container = document.getElementById("teams");
-    container.innerHTML = "";
+      if (!data) {
+        container.innerHTML = "<p>No teams registered yet.</p>";
+        return;
+      }
 
-    for (const id in data) {
-      const team = data[id];
-      const div = document.createElement("div");
-      div.innerHTML = `
-        <input type="radio" name="vote" value="${id}"> ${team.teamName} (${team.leaderName})
-      `;
-      container.appendChild(div);
-    }
+      for (const id in data) {
+        const team = data[id];
+        const div = document.createElement("div");
+        div.innerHTML = `
+          <input type="radio" name="vote" value="${id}"> 
+          <strong>${team.teamName}</strong> (${team.leaderName}, ${team.classSection})
+        `;
+        container.appendChild(div);
+      }
 
-    const btn = document.createElement("button");
-    btn.textContent = "Submit Vote";
-    btn.onclick = () => {
-      const choice = document.querySelector('input[name="vote"]:checked');
-      if (!choice) return alert("Please select a team!");
-      const voteRef = ref(db, `teams/${choice.value}`);
-      update(voteRef, { votes: (data[choice.value].votes || 0) + 1 });
-      document.getElementById("message").innerText = "✅ Vote submitted!";
-    };
-    container.appendChild(btn);
-  });
-}
+      const btn = document.createElement("button");
+      btn.textContent = "Submit Vote";
+      btn.onclick = () => {
+        const choice = document.querySelector('input[name="vote"]:checked');
+        if (!choice) {
+          alert("Please select a team!");
+          return;
+        }
+        const voteRef = ref(db, `teams/${choice.value}`);
+        const currentVotes = data[choice.value].votes || 0;
+        update(voteRef, { votes: currentVotes + 1 });
+        document.getElementById("message").innerText = "✅ Vote submitted!";
+      };
+      container.appendChild(btn);
+    });
+  }
 
-// ----------- LEADERBOARD -----------
-if (leaderboardBtn) {
-  leaderboardBtn.addEventListener("click", showLeaderboard);
-}
+  // ============ LEADERBOARD ============
+  if (leaderboardBtn) {
+    leaderboardBtn.addEventListener("click", showLeaderboard);
+  }
 
-function showLeaderboard() {
-  document.body.innerHTML = `<h2>Leaderboard</h2><div id="board"></div>`;
-  const teamsRef = ref(db, "teams");
+  function showLeaderboard() {
+    document.body.innerHTML = `<h2>Leaderboard</h2><div id="board"></div><button id="backBtn">⬅️ Back</button>`;
+    document.getElementById("backBtn").addEventListener("click", () => location.reload());
 
-  onValue(teamsRef, (snapshot) => {
-    const data = snapshot.val();
-    const sorted = Object.values(data || {}).sort((a, b) => b.votes - a.votes);
-    const board = document.getElementById("board");
-    board.innerHTML = sorted.map((t, i) => `${i + 1}. ${t.teamName} — ${t.votes} votes`).join("<br>");
-  });
-}
+    const teamsRef = ref(db, "teams");
+    onValue(teamsRef, (snapshot) => {
+      const data = snapshot.val();
+      if (!data) {
+        document.getElementById("board").innerHTML = "<p>No teams yet.</p>";
+        return;
+      }
+
+      const sorted = Object.values(data).sort((a, b) => b.votes - a.votes);
+      const board = document.getElementById("board");
+      board.innerHTML = sorted.map((t, i) =>
+        `<p>${i + 1}. <strong>${t.teamName}</strong> — ${t.votes} votes</p>`
+      ).join("");
+    });
+  }
+
+});
