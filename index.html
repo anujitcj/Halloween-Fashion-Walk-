@@ -73,15 +73,22 @@
       </div>
 
       <!-- Leaderboard -->
-      <div id="leaderboard" class="card hidden">
-        <h2>Live Leaderboard</h2>
-        <ol id="leaderList" class="leaderboard-list">
-          <!-- live items -->
-        </ol>
-        <div class="form-actions">
-          <button id="boardBack" class="btn btn-ghost">Back</button>
-        </div>
-      </div>
+    <!-- Leaderboard -->
+<div id="leaderboard" class="hidden">
+  <h2>Live Leaderboard</h2>
+  <table class="leader-table">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Team No.</th>
+        <th>Team Name</th>
+        <th>Votes</th>
+      </tr>
+    </thead>
+    <tbody id="leaderList"></tbody>
+  </table>
+</div>
+
     </section>
 
     <footer class="site-footer">
