@@ -61,9 +61,9 @@ submitRegisterBtn.addEventListener("click", async () => {
   submitRegisterBtn.disabled = true;
 
   const name = document.getElementById("participantName").value.trim();
-  const regNumber = document.getElementById("regNumber").value.trim();
+  const classSection = document.getElementById("classSection").value.trim();
 
-  if (!name || !regNumber) {
+  if (!name || !classSection) {
     registerMsg.textContent = "⚠️ Please fill all fields.";
     submitRegisterBtn.disabled = false;
     return;
@@ -73,25 +73,21 @@ submitRegisterBtn.addEventListener("click", async () => {
   const snapshot = await get(participantsRef);
   const existing = snapshot.exists() ? Object.values(snapshot.val()) : [];
 
-  const duplicate = existing.some(p => p.regNumber && p.regNumber.toLowerCase() === regNumber.toLowerCase());
-  if (duplicate) {
-    registerMsg.textContent = "❌ This registration number is already used.";
-    submitRegisterBtn.disabled = false;
-    return;
-  }
-
+  // Auto-generate registration number: 001, 002, etc.
   const participantNumber = existing.length + 1;
+  const regNumber = participantNumber.toString().padStart(3, "0");
 
   await push(participantsRef, {
     name,
+    classSection,
     regNumber,
     participantNumber,
     votes: 0
   });
 
-  registerMsg.textContent = `✅ Registered successfully. Participant No ${participantNumber}`;
+  registerMsg.textContent = `✅ Registered successfully! Your ID is ${regNumber}`;
   document.getElementById("participantName").value = "";
-  document.getElementById("regNumber").value = "";
+  document.getElementById("classSection").value = "";
 
   setTimeout(() => { submitRegisterBtn.disabled = false; }, 1200);
 });
@@ -114,10 +110,10 @@ async function loadParticipants() {
   rows.forEach(row => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${row.participantNumber ?? "-"}</td>
+      <td>${row.regNumber}</td>
       <td>${escapeHtml(row.name)}</td>
-      <td>${escapeHtml(row.regNumber)}</td>
-      <td class="vote-cell-radio"><input type="radio" name="vote" value="${row.participantNumber}" data-key="${row.key}"></td>
+      <td>${escapeHtml(row.classSection)}</td>
+      <td class="vote-cell-radio"><input type="radio" name="vote" value="${row.regNumber}" data-key="${row.key}"></td>
     `;
     participantListTbody.appendChild(tr);
   });
@@ -184,7 +180,7 @@ function loadLeaderboard() {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
-        <td>${p.participantNumber}</td>
+        <td>${p.regNumber}</td>
         <td>${escapeHtml(p.name)}</td>
         <td>${p.votes || 0}</td>
       `;
