@@ -1,6 +1,7 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
 import { getDatabase, ref, push, onValue, update, get } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
+// 🔧 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCF-3Zu4tuhrrhH9PTx6-pfyJDLszRIqOk",
   authDomain: "halloween-fashion-walk.firebaseapp.com",
@@ -12,10 +13,11 @@ const firebaseConfig = {
   measurementId: "G-YWWSQ63KN5"
 };
 
+// 🚀 Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-// Elements
+// 🎛️ Elements
 const registerBtn = document.getElementById("registerBtn");
 const voteBtn = document.getElementById("voteBtn");
 const leaderboardBtn = document.getElementById("leaderboardBtn");
@@ -23,7 +25,7 @@ const registerForm = document.getElementById("registerForm");
 const voteForm = document.getElementById("voteForm");
 const leaderboard = document.getElementById("leaderboard");
 
-// Show/Hide Sections
+// 🧭 Section toggle logic
 registerBtn.onclick = () => showSection(registerForm);
 voteBtn.onclick = () => { showSection(voteForm); loadTeams(); };
 leaderboardBtn.onclick = () => { showSection(leaderboard); loadLeaderboard(); };
@@ -33,21 +35,36 @@ function showSection(section) {
   section.classList.remove("hidden");
 }
 
-// Register Team
-document.getElementById("submitRegister").onclick = async () => {
+// 📝 Register Team (with duplicate + double-click protection)
+const submitRegisterBtn = document.getElementById("submitRegister");
+
+submitRegisterBtn.onclick = async () => {
+  submitRegisterBtn.disabled = true; // ⛔ prevent double clicks
+
   const teamName = document.getElementById("teamName").value.trim();
   const leaderName = document.getElementById("leaderName").value.trim();
   const classSection = document.getElementById("classSection").value.trim();
   const msg = document.getElementById("registerMsg");
 
   if (!teamName || !leaderName || !classSection) {
-    msg.textContent = "Please fill all fields.";
+    msg.textContent = "⚠️ Please fill all fields.";
+    submitRegisterBtn.disabled = false;
     return;
   }
 
   const teamsRef = ref(db, "teams");
   const snapshot = await get(teamsRef);
-  const teamCount = snapshot.exists() ? Object.keys(snapshot.val()).length : 0;
+  const existingTeams = snapshot.exists() ? Object.values(snapshot.val()) : [];
+
+  // 🛑 Prevent duplicate team names
+  const duplicate = existingTeams.some(t => t.teamName.toLowerCase() === teamName.toLowerCase());
+  if (duplicate) {
+    msg.textContent = "❌ Team name already registered!";
+    submitRegisterBtn.disabled = false;
+    return;
+  }
+
+  const teamCount = existingTeams.length;
   const teamNumber = teamCount + 1;
 
   await push(teamsRef, {
@@ -58,13 +75,16 @@ document.getElementById("submitRegister").onclick = async () => {
     votes: 0
   });
 
-  msg.textContent = `Team registered successfully! Your Team Number is ${teamNumber}`;
+  msg.textContent = `✅ Registered successfully! Your Team Number is ${teamNumber}`;
   document.getElementById("teamName").value = "";
   document.getElementById("leaderName").value = "";
   document.getElementById("classSection").value = "";
+
+  // Re-enable after short delay
+  setTimeout(() => submitRegisterBtn.disabled = false, 2000);
 };
 
-// Load Teams for Voting
+// 🗳️ Load Teams for Voting
 async function loadTeams() {
   const teamList = document.getElementById("teamList");
   teamList.innerHTML = "";
@@ -73,7 +93,7 @@ async function loadTeams() {
   const snapshot = await get(teamsRef);
 
   if (snapshot.exists()) {
-    const teams = Object.values(snapshot.val());
+    const teams = Object.values(snapshot.val()).sort((a, b) => a.teamNumber - b.teamNumber);
     teams.forEach(team => {
       const div = document.createElement("div");
       div.innerHTML = `
@@ -89,13 +109,13 @@ async function loadTeams() {
   }
 }
 
-// Submit Vote
+// 🗳️ Submit Vote
 document.getElementById("submitVote").onclick = async () => {
   const selected = document.querySelector('input[name="vote"]:checked');
   const msg = document.getElementById("voteMsg");
 
   if (!selected) {
-    msg.textContent = "Please select a team!";
+    msg.textContent = "⚠️ Please select a team!";
     return;
   }
 
@@ -108,10 +128,10 @@ document.getElementById("submitVote").onclick = async () => {
   const teamRef = ref(db, `teams/${teamKey}`);
   await update(teamRef, { votes: data[teamKey].votes + 1 });
 
-  msg.textContent = `Vote submitted successfully for Team ${teamNum}!`;
+  msg.textContent = `✅ Vote submitted successfully for Team ${teamNum}!`;
 };
 
-// Load Leaderboard (Live)
+// 🏆 Live Leaderboard
 function loadLeaderboard() {
   const leaderList = document.getElementById("leaderList");
   const teamsRef = ref(db, "teams");
@@ -120,11 +140,13 @@ function loadLeaderboard() {
     leaderList.innerHTML = "";
     if (snapshot.exists()) {
       const teams = Object.values(snapshot.val()).sort((a, b) => b.votes - a.votes);
-      teams.forEach(team => {
+      teams.forEach((team, index) => {
         const li = document.createElement("li");
-        li.textContent = `Team ${team.teamNumber}: ${team.teamName} — ${team.votes} votes`;
+        li.textContent = `#${index + 1} Team ${team.teamNumber}: ${team.teamName} — ${team.votes} votes`;
         leaderList.appendChild(li);
       });
+    } else {
+      leaderList.innerHTML = "<li>No teams yet.</li>";
     }
   });
 }
