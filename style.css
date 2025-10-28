@@ -1,166 +1,167 @@
-/* === CLEAN HALLOWEEN THEME (Fixed Layout + Glow + No Blob) === */
-
+/* ====== Base ====== */
 :root {
-  --bg: #0a0a0a;
-  --accent: #ff6600;
-  --accent-light: #ffa64d;
+  --bg: #000;
+  --accent: #ff7b00;
   --text: #fff;
-  --muted: #bbbbbb;
+  --muted: #aaa;
 }
 
-/* Reset + Center */
-* { box-sizing: border-box; margin: 0; padding: 0; }
-
 body {
+  margin: 0;
   font-family: "Poppins", sans-serif;
-  background: linear-gradient(180deg, #0b0b0b 0%, #1a1a1a 100%);
+  background-color: var(--bg);
   color: var(--text);
   display: flex;
   justify-content: center;
-  align-items: flex-start;
-  min-height: 100vh;
-  padding: 2rem 1rem;
-}
-
-/* Main Container */
-.container {
-  width: 90%;
-  max-width: 600px;
-  background: #111;
-  border: 1px solid rgba(255, 102, 0, 0.2);
-  border-radius: 16px;
-  padding: 2rem;
+  align-items: center;
+  height: 100vh;
   text-align: center;
-  box-shadow: 0 0 20px rgba(255, 102, 0, 0.1);
-  margin-top: 2rem;
+  background-image: radial-gradient(circle at top left, #ff880030, transparent 60%);
 }
 
-/* Title */
-h1 {
-  color: var(--accent);
-  margin-bottom: 1rem;
-  font-size: 2rem;
-  text-shadow: 0 0 10px rgba(255, 102, 0, 0.3);
-}
-
-/* Buttons */
-button {
-  background: linear-gradient(180deg, var(--accent), var(--accent-light));
-  border: none;
-  color: #111;
-  font-weight: 600;
-  padding: 12px 24px;
-  border-radius: 10px;
-  margin: 0.5rem;
-  cursor: pointer;
-  font-size: 1rem;
-  transition: all 0.2s ease;
-  box-shadow: 0 0 12px rgba(255, 102, 0, 0.2);
-  position: relative;
-}
-
-/* Fix the weird "eye"/blob */
-button::before, button::after {
-  content: none !important;
-  display: none !important;
-}
-
-button:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 0 20px rgba(255, 102, 0, 0.3);
-}
-
-button:active {
-  transform: scale(0.98);
-}
-
-/* Inputs */
-input {
+/* ====== Card container ====== */
+.card {
+  background: rgba(20, 20, 20, 0.95);
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(255, 120, 0, 0.5);
+  padding: 30px 40px;
   width: 90%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 8px;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: rgba(255, 255, 255, 0.05);
-  color: var(--text);
-  font-size: 1rem;
+  max-width: 450px;
+  transition: all 0.3s ease;
 }
 
-input::placeholder {
-  color: #999;
-}
-
-input:focus {
-  border-color: var(--accent);
-  outline: none;
-  box-shadow: 0 0 10px rgba(255, 102, 0, 0.25);
-}
-
-/* Forms */
 .hidden {
   display: none;
 }
 
-#registerForm, #voteForm, #leaderboard {
-  margin-top: 1.5rem;
+h1 {
+  color: var(--accent);
+  font-size: 1.8rem;
+  margin-bottom: 10px;
+  text-shadow: 0 0 8px var(--accent);
 }
 
-/* Voting Table */
-#teamList {
-  display: table;
+/* ====== Input fields ====== */
+input[type="text"] {
   width: 100%;
-  margin-top: 1rem;
-  border-collapse: collapse;
-}
-
-#teamList tr {
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-#teamList td {
-  padding: 12px;
-  text-align: left;
+  padding: 12px 14px;
+  margin: 10px 0;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  background: #111;
+  color: var(--text);
   font-size: 1rem;
+  outline: none;
+  transition: box-shadow 0.2s ease;
 }
 
-#teamList input[type="radio"] {
-  width: 20px;
-  height: 20px;
-  accent-color: var(--accent);
+input[type="text"]:focus {
+  box-shadow: 0 0 10px var(--accent);
 }
 
-/* Fix Submit + Back size */
-#submitVote,
-#voteBack {
-  width: 160px;
+/* Align multiple inputs inline */
+.inline-inputs {
+  display: flex;
+  gap: 10px;
+}
+
+.inline-inputs input {
+  flex: 1;
+}
+
+/* ====== Buttons ====== */
+button {
+  background: var(--accent);
+  color: var(--text);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin: 8px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  width: fit-content;
   display: inline-block;
+  box-shadow: 0 0 10px rgba(255, 120, 0, 0.4);
 }
 
-/* Messages */
-#registerMsg, #voteMsg {
-  margin-top: 10px;
+button:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 14px rgba(255, 120, 0, 0.7);
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Fix: No pseudo or weird eye blobs */
+button::before, 
+button::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* ====== Messages ====== */
+.msg {
   font-size: 0.95rem;
-  color: var(--muted);
+  color: var(--accent);
+  margin-top: 10px;
 }
 
-/* Leaderboard */
-#leaderList {
+/* ====== Table (Vote Section) ====== */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 15px;
+  font-size: 0.95rem;
+}
+
+td, th {
+  border-bottom: 1px solid var(--accent);
+  padding: 8px;
+  text-align: left;
+}
+
+.vote-cell-radio {
+  text-align: center;
+}
+
+/* ====== Leaderboard ====== */
+ul {
   list-style: none;
   padding: 0;
 }
 
-#leaderList li {
-  background: rgba(255, 255, 255, 0.05);
-  margin: 8px 0;
+ul li {
+  background: #111;
+  border: 1px solid var(--accent);
+  border-radius: 10px;
+  margin: 6px 0;
   padding: 10px;
-  border-radius: 8px;
+  font-size: 0.95rem;
 }
 
-/* Footer credit (very subtle) */
+/* ====== Footer ====== */
 footer {
-  margin-top: 2rem;
-  text-align: center;
+  margin-top: 20px;
   font-size: 0.85rem;
   color: var(--muted);
-  opacity: 0.3;
+}
+
+footer span {
+  color: var(--accent);
+}
+
+/* ====== Responsive ====== */
+@media (max-width: 600px) {
+  .card {
+    padding: 25px 25px;
+  }
+
+  button {
+    font-size: 0.95rem;
+    padding: 10px 14px;
+  }
 }
