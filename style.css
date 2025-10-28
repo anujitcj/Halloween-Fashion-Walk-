@@ -165,3 +165,26 @@ footer span {
     padding: 10px 14px;
   }
 }
+/* ====== Fix that ghost-eye button nonsense ====== */
+button, 
+button * {
+  background-image: none !important;
+  content: none !important;
+  mask: none !important;
+  -webkit-mask: none !important;
+  box-shadow: none !important;
+}
+
+button::before, 
+button::after {
+  display: none !important;
+  content: none !important;
+  mask: none !important;
+  background: none !important;
+}
+
+/* ====== Title white glow ====== */
+h1 {
+  color: #fff !important;
+  text-shadow: 0 0 15px #ffffffaa, 0 0 25px var(--accent);
+}
