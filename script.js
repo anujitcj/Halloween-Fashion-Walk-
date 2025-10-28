@@ -167,11 +167,17 @@ function loadLeaderboard(){
     }
     const data = snapshot.val();
     const arr = Object.values(data).sort((a,b) => (b.votes||0) - (a.votes||0));
-    arr.forEach((t, i) => {
-      const li = document.createElement("li");
-      li.textContent = `#${i+1} — Team ${t.teamNumber}: ${t.teamName} — ${t.votes || 0} votes`;
-      leaderList.appendChild(li);
-    });
+   arr.forEach((t, i) => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `
+    <td>${i + 1}</td>
+    <td>${t.teamNumber}</td>
+    <td>${escapeHtml(t.teamName)}</td>
+    <td>${t.votes || 0}</td>
+  `;
+  leaderList.appendChild(tr);
+});
+
   });
 }
 
