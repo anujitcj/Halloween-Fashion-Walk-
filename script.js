@@ -216,3 +216,21 @@ function escapeHtml(unsafe) {
 document.addEventListener("DOMContentLoaded", () => {
   [registerForm, voteForm, leaderboard].forEach(s => s.classList.add("hidden"));
 });
+/* ===== Admin toggle for resetting local vote lock ===== */
+const adminPanel = document.getElementById("adminPanel");
+const resetBtn = document.getElementById("resetVotes");
+
+// Toggle visibility with Ctrl + Shift + A
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "a") {
+    adminPanel.classList.toggle("hidden");
+    console.log(adminPanel.classList.contains("hidden") ? "🔒 Admin panel hidden" : "🟢 Admin panel shown");
+  }
+});
+
+// Reset localStorage flag
+resetBtn?.addEventListener("click", () => {
+  localStorage.removeItem("hasVoted");
+  alert("✅ Local vote lock cleared. You can vote again from this device.");
+});
+
