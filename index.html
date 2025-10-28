@@ -25,18 +25,15 @@
     <section class="content">
       <!-- Registration Card -->
       <div id="registerForm" class="card hidden">
-        <h2>Team Registration</h2>
+        <h2>Participant Registration</h2>
         <div class="form-row">
-          <label>Team Name
-            <input type="text" id="teamName" placeholder="e.g. The Spooky Squad" />
+          <label>Name
+            <input type="text" id="participantName" placeholder="e.g. Priya Sharma" />
           </label>
         </div>
-        <div class="form-row two">
-          <label>Leader's Name
-            <input type="text" id="leaderName" placeholder="e.g. Priya Sharma" />
-          </label>
-          <label>Class & Section
-            <input type="text" id="classSection" placeholder="e.g. BBA 'A' III Sem" />
+        <div class="form-row">
+          <label>Registration Number
+            <input type="text" id="regNumber" placeholder="e.g. 23BBA045" />
           </label>
         </div>
         <div class="form-actions">
@@ -48,18 +45,18 @@
 
       <!-- Vote Card -->
       <div id="voteForm" class="card hidden">
-        <h2>Vote — Choose One Team</h2>
+        <h2>Vote — Choose One Participant</h2>
         <div class="table-wrap">
           <table id="voteTable" class="vote-table" aria-live="polite">
             <thead>
               <tr>
-                <th>Team No</th>
-                <th>Team Name</th>
-                <th>Leader (Class)</th>
+                <th>No</th>
+                <th>Name</th>
+                <th>Reg. Number</th>
                 <th>Vote</th>
               </tr>
             </thead>
-            <tbody id="teamList">
+            <tbody id="participantList">
               <!-- rows injected here -->
             </tbody>
           </table>
@@ -78,8 +75,8 @@
           <thead>
             <tr>
               <th>Rank</th>
-              <th>Team No.</th>
-              <th>Team Name</th>
+              <th>No.</th>
+              <th>Name</th>
               <th>Votes</th>
             </tr>
           </thead>
@@ -95,11 +92,12 @@
   </main>
 
   <script type="module" src="script.js"></script>
+
   <!-- Admin Reset (hidden by default) -->
-<div id="adminPanel" class="hidden">
-  <button id="resetVotes" class="btn btn-ghost" style="background:rgba(255,255,255,0.05);color:var(--muted);font-size:12px;margin-top:10px;">
-    🔒 Reset Local Vote Lock (Admin)
-  </button>
-</div>
+  <div id="adminPanel" class="hidden">
+    <button id="resetVotes" class="btn btn-ghost" style="background:rgba(255,255,255,0.05);color:var(--muted);font-size:12px;margin-top:10px;">
+      🔒 Reset Local Vote Lock (Admin)
+    </button>
+  </div>
 </body>
 </html>
