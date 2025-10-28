@@ -132,9 +132,15 @@ async function loadTeams(){
   });
 }
 
-/* ------- Submit vote (increments votes for selected team) ------- */
 submitVoteBtn.addEventListener("click", async () => {
   voteMsg.textContent = "";
+
+  // 🚫 Check localStorage FIRST — block before anything happens
+  if (localStorage.getItem("hasVoted") === "true") {
+    voteMsg.textContent = "⚠️ You have already voted from this device.";
+    return; // ✅ Stops here — no Firebase update
+  }
+
   const sel = document.querySelector('input[name="vote"]:checked');
   if (!sel) {
     voteMsg.textContent = "⚠️ Please select a team first.";
@@ -147,35 +153,34 @@ submitVoteBtn.addEventListener("click", async () => {
     return;
   }
 
-  const teamRef = ref(db, `teams/${teamKey}`);
-  const snap = await get(teamRef);
-  const current = snap.exists() ? (snap.val().votes || 0) : 0;
-  await update(teamRef, { votes: current + 1 });
+  try {
+    // ✅ Only runs once per device
+    const teamRef = ref(db, `teams/${teamKey}`);
+    const snap = await get(teamRef);
 
-  voteMsg.textContent = "✅ Vote submitted. Thank you!";
+    if (!snap.exists()) {
+      voteMsg.textContent = "⚠️ Team not found. Try again.";
+      return;
+    }
+
+    const current = snap.val().votes || 0;
+
+    // 🚀 Update Firebase
+    await update(teamRef, { votes: current + 1 });
+
+    // 🧠 Mark as voted *immediately after successful update*
+    localStorage.setItem("hasVoted", "true");
+
+    voteMsg.textContent = "✅ Vote submitted successfully! You can’t vote again.";
+    submitVoteBtn.disabled = true;
+    document.querySelectorAll('input[name="vote"]').forEach(r => (r.disabled = true));
+
+  } catch (err) {
+    console.error("Vote error:", err);
+    voteMsg.textContent = "❌ Something went wrong. Try again later.";
+  }
 });
-// === Prevent multiple votes per user ===
-const hasVoted = localStorage.getItem("hasVoted");
 
-if (hasVoted) {
-  const voteSection = document.getElementById("voteForm");
-  if (voteSection) {
-    voteSection.innerHTML = `
-      <h2>You've already voted!</h2>
-      <p style="color: var(--accent); font-weight: bold;">
-        Thank you for participating in the Halloween Carnival Voting 🎃
-      </p>
-    `;
-  }
-}
-
-document.getElementById("submitVote")?.addEventListener("click", (e) => {
-  e.preventDefault();
-
-  if (localStorage.getItem("hasVoted")) {
-    alert("You have already voted once. Thank you!");
-    return;
-  }
 
   // Your existing Firebase vote submission code here...
 
