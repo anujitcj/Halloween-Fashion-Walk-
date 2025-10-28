@@ -1,212 +1,163 @@
-/* Minimalist dark + orange theme */
-/* colors: black background, orange accents, primarily white text */
-
-:root{
-  --bg:#070607;
-  --card:#0f0f10;
-  --muted:#bfbfbf;
-  --accent:#ff8a00; /* orange */
-  --accent-2:#ffb86b;
-  --glow: 0 6px 30px rgba(255,138,0,0.08);
-}
-
-*{box-sizing:border-box}
-html,body{height:100%}
-body{
-  margin:0;
-  font-family:Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-  background: linear-gradient(180deg,var(--bg) 0%, #0b0b0b 100%);
-  color:#fff;
-  -webkit-font-smoothing:antialiased;
-  -moz-osx-font-smoothing:grayscale;
-  min-height:100vh;
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
-
-/* layout */
-.site{
-  width:100%;
-  max-width:980px;
-  margin:40px;
-  display:flex;
-  flex-direction:column;
-  gap:18px;
-}
-
-/* hero */
-.hero{
-  background: linear-gradient(90deg, rgba(255,138,0,0.06), rgba(0,0,0,0) 60%);
-  border-radius:12px;
-  padding:18px 20px;
-  box-shadow: var(--glow);
-  border: 1px solid rgba(255,138,0,0.06);
-}
-
-.hero-inner{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:24px;
-}
-
-.title-block .small{
-  color:var(--muted);
-  font-size:13px;
-  letter-spacing:0.4px;
-}
-.title-block h1{
-  margin:6px 0 0 0;
-  font-size:20px;
-  color:#fff;
-  letter-spacing:0.3px;
-}
-
-/* buttons */
-.actions{display:flex; gap:10px; align-items:center}
-.btn{
-  border:0;
-  padding:10px 14px;
-  border-radius:10px;
-  cursor:pointer;
-  font-weight:600;
-  background:transparent;
+/* =========================
+   HALLOWEEN THEME STYLING
+   ========================= */
+body {
+  font-family: 'Poppins', sans-serif;
+  background: radial-gradient(circle at top, #000000 0%, #1a1a1a 100%);
   color: #fff;
-  transition: transform .18s ease, box-shadow .18s ease;
-  position:relative;
-  overflow:visible;
-}
-.btn:active{transform:translateY(1px)}
-.btn-primary{
-  background: linear-gradient(180deg,var(--accent) 0%, var(--accent-2) 100%);
-  color:#111;
-  box-shadow: 0 6px 20px rgba(255,138,0,0.12);
-}
-.btn-ghost{
-  background: transparent;
-  color: var(--muted);
-  border: 1px solid rgba(255,255,255,0.03);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  font-size: 18px;
+  overflow: hidden;
+  position: relative;
 }
 
-/* subtle bat flying on hover for submitVote button */
-.btn .bat{
-  width:18px;
-  height:18px;
-  fill: #111;
-  position:absolute;
-  right:12px;
-  top:50%;
-  transform:translateY(-50%) translateX(0) scale(1);
-  opacity:0;
-  transition: transform .55s cubic-bezier(.2,.9,.2,1), opacity .35s ease;
-}
-.btn-primary:hover .bat{
-  opacity:1;
-  transform:translateY(-50%) translateX(36px) scale(.9);
+/* 🦇 BAT ANIMATION */
+.bat {
+  position: absolute;
+  width: 60px;
+  height: 30px;
+  background: url('https://cdn-icons-png.flaticon.com/512/616/616408.png') no-repeat center/contain;
+  top: 15%;
+  animation: fly 10s linear infinite;
+  opacity: 0.9;
+  z-index: 1000;
 }
 
-/* content area */
-.content{display:flex; gap:18px; flex-direction:column}
-.card{
-  background: linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
-  border-radius:12px;
-  padding:18px;
-  border: 1px solid rgba(255,255,255,0.02);
-  box-shadow: 0 6px 30px rgba(0,0,0,0.5);
+@keyframes fly {
+  0% {
+    left: -80px;
+    top: 20%;
+    transform: scale(1) rotate(0deg);
+  }
+  25% {
+    top: 15%;
+    transform: scale(1.1) rotate(10deg);
+  }
+  50% {
+    top: 10%;
+    transform: scale(1.2) rotate(-10deg);
+  }
+  75% {
+    top: 18%;
+    transform: scale(1.1) rotate(5deg);
+  }
+  100% {
+    left: 110%;
+    top: 20%;
+    transform: scale(1) rotate(0deg);
+  }
 }
 
-/* form */
-.form-row{margin-bottom:10px}
-.form-row.two{display:flex; gap:10px}
-label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
-input[type="text"]{
-  width:100%;
-  padding:10px 12px;
-  border-radius:8px;
-  border:1px solid rgba(255,255,255,0.04);
-  background:transparent;
-  color:#fff;
-  outline:none;
-  transition: box-shadow .12s ease, border-color .12s ease;
-}
-input[type="text"]:focus{
-  box-shadow:0 6px 20px rgba(255,138,0,0.06);
-  border-color: rgba(255,138,0,0.18);
+/* Container */
+.container {
+  width: 95%;
+  max-width: 650px;
+  text-align: center;
+  background: #111;
+  padding: 3rem;
+  border-radius: 20px;
+  box-shadow: 0 0 25px rgba(255, 140, 0, 0.3);
+  color: #fff;
+  transition: all 0.3s ease-in-out;
+  z-index: 2;
 }
 
-/* messages */
-.msg{margin-top:10px;color:var(--muted);font-size:13px}
-
-/* table */
-.table-wrap{overflow:auto}
-.vote-table{
-  width:100%;
-  border-collapse:collapse;
-  margin-top:6px;
-  font-size:14px;
-}
-.vote-table thead th{
-  text-align:left;
-  padding:10px;
-  color:var(--muted);
-  font-weight:600;
-  border-bottom:1px solid rgba(255,255,255,0.03);
-}
-.vote-table tbody td{
-  padding:12px 10px;
-  border-bottom:1px solid rgba(255,255,255,0.02);
-  vertical-align:middle;
-  color:#fff;
-}
-.vote-table tbody tr{
-  transition: background .14s ease, transform .12s ease, box-shadow .12s ease;
-}
-.vote-table tbody tr:hover{
-  background: linear-gradient(90deg, rgba(255,138,0,0.03), transparent);
-  transform: translateY(-3px);
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-}
-.vote-cell-radio{
-  text-align:center;
+h1 {
+  color: #ff6600;
+  font-size: 2.2rem;
+  margin-bottom: 1.5rem;
+  text-shadow: 0 0 15px rgba(255, 140, 0, 0.4);
 }
 
-/* radio style: clean circular */
-input[type="radio"]{
-  width:18px;
-  height:18px;
-  accent-color:var(--accent);
-  cursor:pointer;
+h2 {
+  color: #ff8800;
+  margin-bottom: 1rem;
+  text-shadow: 0 0 10px rgba(255, 140, 0, 0.4);
 }
 
-/* leaderboard */
-.leaderboard-list{padding-left:18px;margin:0}
-.leaderboard-list li{
-  padding:10px 8px;
-  border-radius:8px;
-  margin-bottom:8px;
-  background: linear-gradient(90deg, rgba(255,255,255,0.01), transparent);
-  color:#fff;
+/* Buttons */
+button {
+  padding: 16px 28px;
+  border: none;
+  border-radius: 12px;
+  background-color: #ff6600;
+  color: #fff;
+  margin: 10px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  transition: transform 0.2s ease, background 0.3s ease, box-shadow 0.3s ease;
 }
 
-/* footer */
-.site-footer{
-  text-align:center;
-  margin-top:6px;
-  color:var(--muted);
-  font-size:12px;
-}
-.credit .muted{
-  color: rgba(255,255,255,0.32);
-  font-size:12px;
-  letter-spacing:0.2px;
+button:hover {
+  background-color: #ff8800;
+  transform: scale(1.08);
+  box-shadow: 0 0 20px rgba(255, 140, 0, 0.5);
 }
 
-/* hidden util */
-.hidden{display:none}
+/* Inputs */
+input {
+  width: 95%;
+  padding: 14px;
+  margin: 12px 0;
+  border-radius: 10px;
+  border: 2px solid #ff6600;
+  font-size: 1rem;
+  background: #222;
+  color: #fff;
+  outline: none;
+  transition: 0.3s ease;
+}
 
-/* responsive */
-@media (max-width:720px){
-  .hero-inner{flex-direction:column;align-items:flex-start;gap:12px}
-  .form-row.two{flex-direction:column}
+input::placeholder {
+  color: #ccc;
+}
+
+input:focus {
+  border-color: #ff8800;
+  box-shadow: 0 0 10px rgba(255, 140, 0, 0.3);
+}
+
+/* Hidden Sections */
+.hidden {
+  display: none;
+}
+
+/* Vote Table */
+.vote-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 12px;
+  font-size: 1rem;
+}
+
+.vote-table th,
+.vote-table td {
+  padding: 14px;
+  border-bottom: 1px solid #333;
+}
+
+.vote-table tr:hover {
+  background-color: rgba(255, 102, 0, 0.1);
+  transition: background 0.3s;
+}
+
+/* Footer */
+footer {
+  margin-top: 30px;
+  font-size: 0.8rem;
+  color: #aaa;
+}
+
+footer a {
+  color: #ff6600;
+  text-decoration: none;
+}
+
+footer a:hover {
+  text-decoration: underline;
 }
