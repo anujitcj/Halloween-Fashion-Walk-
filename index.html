@@ -71,21 +71,27 @@
 </div>
 
 
-      <!-- Leaderboard -->
-      <div id="leaderboard" class="card hidden">
-        <h2>Live Leaderboard</h2>
-        <table class="leader-table">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>No.</th>
-              <th>Name</th>
-              <th>Votes</th>
-            </tr>
-          </thead>
-          <tbody id="leaderList"></tbody>
-        </table>
-      </div>
+     <!-- Leaderboard -->
+<div id="leaderboard" class="card hidden">
+  <h2>Live Leaderboard</h2>
+  <table class="leader-table">
+    <thead>
+      <tr>
+        <th>Rank</th>
+        <th>Reg. No.</th>
+        <th>Name</th>
+        <th>Votes</th>
+      </tr>
+    </thead>
+    <tbody id="leaderList"></tbody>
+  </table>
+
+  <!-- 🔥 Bar Chart -->
+  <div class="chart-container">
+    <canvas id="leaderboardChart"></canvas>
+  </div>
+</div>
+
     </section>
 
     <footer class="site-footer">
