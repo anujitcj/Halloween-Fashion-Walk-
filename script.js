@@ -178,32 +178,84 @@ submitVoteBtn.addEventListener("click", async () => {
   }
 });
 
-/* ====== Leaderboard ====== */
+/* ------- Leaderboard (table + live orange bar chart) ------- */
+let voteChart; // store chart instance so we can update dynamically
+
 function loadLeaderboard() {
   leaderList.innerHTML = "";
-  const refPath = ref(db, "participants");
-  onValue(refPath, (snapshot) => {
+  const participantsRef = ref(db, "participants");
+
+  onValue(participantsRef, (snapshot) => {
     leaderList.innerHTML = "";
     if (!snapshot.exists()) {
-      leaderList.innerHTML = `<tr><td colspan="4" style="color:var(--muted);padding:12px">No participants yet.</td></tr>`;
+      leaderList.innerHTML = `<tr><td colspan="4" style="color:var(--muted)">No participants yet.</td></tr>`;
+      if (voteChart) voteChart.destroy();
       return;
     }
 
     const data = snapshot.val();
     const arr = Object.values(data).sort((a, b) => (b.votes || 0) - (a.votes || 0));
 
-    arr.forEach((t, i) => {
+    // rebuild table
+    arr.forEach((p, i) => {
       const tr = document.createElement("tr");
       tr.innerHTML = `
         <td>${i + 1}</td>
-        <td>${t.regNumber}</td>
-        <td>${escapeHtml(t.name)}</td>
-        <td>${t.votes || 0}</td>
+        <td>${p.regNumber}</td>
+        <td>${escapeHtml(p.name)}</td>
+        <td>${p.votes || 0}</td>
       `;
       leaderList.appendChild(tr);
     });
+
+    // Build chart data
+    const labels = arr.map(p => `${p.regNumber} - ${p.name}`);
+    const votes = arr.map(p => p.votes || 0);
+
+    // destroy previous chart if any
+    if (voteChart) voteChart.destroy();
+
+    // draw new chart
+    const ctx = document.getElementById("voteChart").getContext("2d");
+    voteChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels,
+        datasets: [{
+          label: "Votes",
+          data: votes,
+          backgroundColor: "rgba(255, 140, 0, 0.7)", // warm orange
+          borderColor: "rgba(255, 165, 0, 1)",
+          borderWidth: 2,
+          borderRadius: 8,
+        }]
+      },
+      options: {
+        responsive: true,
+        scales: {
+          x: {
+            ticks: { color: "#fff", font: { size: 13, family: "Poppins" } },
+            grid: { color: "rgba(255,255,255,0.1)" }
+          },
+          y: {
+            ticks: { color: "#fff", stepSize: 1 },
+            grid: { color: "rgba(255,255,255,0.1)" }
+          }
+        },
+        plugins: {
+          legend: { display: false },
+          title: {
+            display: true,
+            text: "🎃 Live Voting Leaderboard",
+            color: "#fff",
+            font: { size: 18, family: "Poppins", weight: "600" },
+          },
+        },
+      }
+    });
   });
 }
+
 
 /* ====== Escape HTML ====== */
 function escapeHtml(str) {
