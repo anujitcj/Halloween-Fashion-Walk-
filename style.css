@@ -236,4 +236,30 @@ h1 {
 .hidden {
   display: none !important;
 }
+/* ====== Leaderboard Bar Graph ====== */
+.chart-container {
+  margin-top: 25px;
+  width: 100%;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+#leaderboardChart {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 10px;
+  box-shadow: 0 0 15px rgba(255, 120, 0, 0.3);
+}
+
+/* Make chart labels readable */
+.chartjs-render-monitor {
+  color: white;
+}
+
+/* Bar color glow on hover */
+.chart-container canvas:hover {
+  filter: drop-shadow(0 0 10px var(--accent));
+  transition: filter 0.3s ease;
+}
 
