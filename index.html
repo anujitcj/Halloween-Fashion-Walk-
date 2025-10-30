@@ -27,6 +27,12 @@
       <p id="voteMsg" class="msg"></p>
     </section>
 
+    <!-- Result Bar Graph -->
+    <section id="resultSection" class="card hidden">
+      <h2>Results for Participant <span id="resultRegNumber"></span></h2>
+      <canvas id="resultChart"></canvas>
+    </section>
+
     <!-- Leaderboard -->
     <section id="leaderboard" class="card hidden">
       <h2>Final Leaderboard</h2>
@@ -35,15 +41,16 @@
           <tr>
             <th>Rank</th>
             <th>Reg. No</th>
-            <th>Avg. Rating</th>
             <th>Total Votes</th>
+            <th>% 1</th>
+            <th>% 2</th>
+            <th>% 3</th>
+            <th>% 4</th>
+            <th>% 5</th>
           </tr>
         </thead>
         <tbody id="leaderList"></tbody>
       </table>
-      <div class="chart-container">
-        <canvas id="leaderboardChart"></canvas>
-      </div>
     </section>
 
     <!-- Admin Panel -->
