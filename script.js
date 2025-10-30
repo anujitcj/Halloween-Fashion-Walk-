@@ -1,242 +1,249 @@
 /* ====== Firebase (v12 modular) ====== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+import { 
+  getDatabase, ref, set, update, get, onValue, remove 
+} from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
 /* ====== Firebase Config ====== */
 const firebaseConfig = {
-  apiKey: "AIzaSyCF-3Zu4tuhrrhH9PTx6-pfyJDLszRIqOk",
-  authDomain: "halloween-fashion-walk.firebaseapp.com",
-  databaseURL: "https://halloween-fashion-walk-default-rtdb.firebaseio.com",
-  projectId: "halloween-fashion-walk",
-  storageBucket: "halloween-fashion-walk.firebasestorage.app",
-  messagingSenderId: "110631989563",
-  appId: "1:110631989563:web:b0317f8fe823507bd4071e",
-  measurementId: "G-YWWSQ63KN5"
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_PROJECT.firebaseapp.com",
+  databaseURL: "https://YOUR_PROJECT.firebaseio.com",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_PROJECT.appspot.com",
+  messagingSenderId: "YOUR_SENDER_ID",
+  appId: "YOUR_APP_ID"
 };
 
-/* ====== Init ====== */
+/* ====== Init Firebase ====== */
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
-/* ====== Elements ====== */
+/* ====== HTML Elements ====== */
 const voteSection = document.getElementById("voteSection");
-const leaderboard = document.getElementById("leaderboard");
-const leaderList = document.getElementById("leaderList");
-const currentParticipant = document.getElementById("currentParticipant");
 const voteMsg = document.getElementById("voteMsg");
-const voteBtns = document.querySelectorAll(".voteBtn");
-
+const voteRegNumber = document.getElementById("voteRegNumber");
+const currentParticipant = document.getElementById("currentParticipant");
 const adminPanel = document.getElementById("adminPanel");
+const adminCurrent = document.getElementById("adminCurrent");
+const leaderboardSection = document.getElementById("leaderboard");
+const leaderList = document.getElementById("leaderList");
+
+/* Admin buttons */
 const startPollBtn = document.getElementById("startPollBtn");
 const stopPollBtn = document.getElementById("stopPollBtn");
 const nextBtn = document.getElementById("nextBtn");
-const adminMsg = document.getElementById("adminMsg");
-const adminCurrent = document.getElementById("adminCurrent");
+const resetBtn = document.getElementById("resetBtn");
+const showLeaderboardBtn = document.getElementById("showLeaderboardBtn");
 
-const liveChartCanvas = document.getElementById("liveChart");
-const leaderboardChartCanvas = document.getElementById("leaderboardChart");
-
-const ADMIN_PIN = "1989"; // change this if needed
-
-let currentRegNumber = null;
-let pollActive = false;
-let nextRegNumber = 1;
+/* ====== Chart Setup ====== */
 let liveChart, leaderboardChart;
+const ctxLive = document.getElementById("liveChart");
+const ctxLeader = document.getElementById("leaderboardChart");
 
-/* ====== Admin Toggle ====== */
-document.addEventListener("keydown", (e) => {
+/* ====== Constants ====== */
+let activeParticipant = null;
+let pollActive = false;
+let isAdmin = false;
+let totalParticipants = 30;
+
+/* ====== Detect Admin ====== */
+window.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key.toLowerCase() === "b") {
     const pin = prompt("Enter Admin PIN:");
-    if (pin === ADMIN_PIN) adminPanel.classList.toggle("hidden");
-    else alert("❌ Wrong PIN");
+    if (pin === "1234") {
+      isAdmin = true;
+      adminPanel.classList.remove("hidden");
+      voteSection.classList.add("hidden");
+      alert("✅ Admin mode activated!");
+    } else {
+      alert("❌ Wrong PIN");
+    }
   }
 });
 
-/* ====== Admin Controls ====== */
-startPollBtn.addEventListener("click", async () => {
-  const reg = nextRegNumber.toString().padStart(3, "0");
-  currentRegNumber = reg;
-  await set(ref(db, "activePoll"), { regNumber: reg, active: true });
-  pollActive = true;
-  adminMsg.textContent = `✅ Poll started for ${reg}`;
-  adminCurrent.textContent = reg;
-});
-
-stopPollBtn.addEventListener("click", async () => {
-  if (!pollActive) return;
-  await set(ref(db, "activePoll"), { regNumber: currentRegNumber, active: false });
-  pollActive = false;
-  adminMsg.textContent = `⏹ Poll stopped for ${currentRegNumber}`;
-});
-
-nextBtn.addEventListener("click", async () => {
-  nextRegNumber++;
-  if (nextRegNumber > 30) {
-    adminMsg.textContent = "🎉 All 30 participants done!";
-    return;
+/* ====== Initialize participants ====== */
+async function setupParticipants() {
+  for (let i = 1; i <= totalParticipants; i++) {
+    const id = String(i).padStart(3, "0");
+    const pRef = ref(db, "participants/" + id);
+    const snap = await get(pRef);
+    if (!snap.exists()) {
+      await set(pRef, {
+        votes: { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 },
+        avg: 0,
+        total: 0
+      });
+    }
   }
-  adminCurrent.textContent = nextRegNumber.toString().padStart(3, "0");
-  adminMsg.textContent = "➡️ Ready for next participant.";
-});
+}
+setupParticipants();
 
-/* ====== Reset System ====== */
-const resetBtn = document.createElement("button");
-resetBtn.textContent = "🧹 Reset All (Start Fresh)";
-resetBtn.className = "btn btn-secondary";
-resetBtn.style.marginTop = "15px";
-adminPanel.appendChild(resetBtn);
-
-resetBtn.addEventListener("click", async () => {
-  if (!confirm("⚠️ Reset all votes and polls?")) return;
-  await set(ref(db, "participants"), {});
-  await set(ref(db, "activePoll"), {});
-  await set(ref(db, "showLeaderboard"), false);
-  nextRegNumber = 1;
-  pollActive = false;
-  currentRegNumber = null;
-  adminCurrent.textContent = "None";
-  adminMsg.textContent = "✅ Reset complete.";
-
-  Object.keys(localStorage)
-    .filter(k => k.startsWith("voted_"))
-    .forEach(k => localStorage.removeItem(k));
-});
-
-/* ====== Leaderboard Toggle ====== */
-const revealBtn = document.createElement("button");
-revealBtn.textContent = "🏁 Show Final Leaderboard";
-revealBtn.className = "btn btn-primary";
-revealBtn.style.marginTop = "15px";
-adminPanel.appendChild(revealBtn);
-
-revealBtn.addEventListener("click", async () => {
-  await set(ref(db, "showLeaderboard"), true);
-  adminMsg.textContent = "📊 Final leaderboard visible to audience!";
-});
-
-/* ====== Firebase Listeners ====== */
-onValue(ref(db, "activePoll"), (snap) => {
-  if (!snap.exists()) {
-    voteSection.classList.add("hidden");
-    currentParticipant.textContent = "Waiting for next participant…";
-    return;
-  }
-
+/* ====== Real-time Poll Listener ====== */
+onValue(ref(db, "control"), (snap) => {
+  if (!snap.exists()) return;
   const data = snap.val();
-  if (data.active) {
+  activeParticipant = data.activeParticipant || null;
+  pollActive = data.pollActive || false;
+
+  if (activeParticipant) {
+    currentParticipant.textContent = `Participant ${activeParticipant}`;
+    voteRegNumber.textContent = activeParticipant;
+    adminCurrent.textContent = activeParticipant;
+  }
+
+  if (pollActive) {
     voteSection.classList.remove("hidden");
-    currentRegNumber = data.regNumber;
-    currentParticipant.textContent = `Now Performing: ${data.regNumber}`;
-    showLiveChart(data.regNumber);
+    leaderboardSection.classList.add("hidden");
   } else {
     voteSection.classList.add("hidden");
-    currentParticipant.textContent = `Poll closed for ${data.regNumber}`;
   }
+
+  // Start listening to live chart data
+  if (activeParticipant) listenLiveChart(activeParticipant);
 });
 
-onValue(ref(db, "showLeaderboard"), (snap) => {
-  const show = snap.exists() && snap.val() === true;
-  leaderboard.classList.toggle("hidden", !show);
-});
-
-/* ====== Voting (1–5) ====== */
-voteBtns.forEach(btn => {
+/* ====== Voting ====== */
+document.querySelectorAll(".voteBtn").forEach((btn) => {
   btn.addEventListener("click", async () => {
-    const val = parseInt(btn.dataset.value);
-    const activeSnap = await get(ref(db, "activePoll"));
-    if (!activeSnap.exists() || !activeSnap.val().active) {
-      voteMsg.textContent = "⚠️ Voting not active.";
+    if (!pollActive || !activeParticipant) {
+      voteMsg.textContent = "⏳ Wait for next performance.";
       return;
     }
 
-    const reg = activeSnap.val().regNumber;
-    if (localStorage.getItem(`voted_${reg}`) === "true") {
-      voteMsg.textContent = "⚠️ You already voted for this participant.";
+    const value = parseInt(btn.dataset.value);
+    const deviceId = localStorage.getItem("deviceId") || crypto.randomUUID();
+    localStorage.setItem("deviceId", deviceId);
+
+    const userRef = ref(db, "votes/" + deviceId);
+    const snap = await get(userRef);
+    if (snap.exists() && snap.val().lastVotedFor === activeParticipant) {
+      voteMsg.textContent = "✅ You already voted for this participant.";
       return;
     }
 
-    const pRef = ref(db, `participants/${reg}`);
-    const snap = await get(pRef);
-    let data = snap.exists() ? snap.val() : { ratings: { 1:0,2:0,3:0,4:0,5:0 }, total:0, count:0, avg:0 };
+    // Update votes
+    const voteRef = ref(db, `participants/${activeParticipant}/votes/${value}`);
+    const currSnap = await get(voteRef);
+    const currVal = currSnap.exists() ? currSnap.val() : 0;
+    await set(voteRef, currVal + 1);
 
-    data.ratings[val] = (data.ratings[val] || 0) + 1;
-    data.total += val;
-    data.count += 1;
-    data.avg = (data.total / data.count).toFixed(2);
+    // Update user vote
+    await set(userRef, { lastVotedFor: activeParticipant });
 
-    await set(pRef, data);
-    localStorage.setItem(`voted_${reg}`, "true");
-    voteMsg.textContent = "✅ Vote submitted!";
+    voteMsg.textContent = `⭐ Thanks for voting ${value}!`;
+
+    // Update averages
+    updateAverages(activeParticipant);
   });
 });
 
-/* ====== Live Distribution Chart ====== */
-function showLiveChart(reg) {
-  const pRef = ref(db, `participants/${reg}`);
+/* ====== Update Averages ====== */
+async function updateAverages(id) {
+  const pSnap = await get(ref(db, "participants/" + id + "/votes"));
+  if (!pSnap.exists()) return;
+  const votes = pSnap.val();
+  let totalVotes = 0, weighted = 0;
+  for (let k = 1; k <= 5; k++) {
+    totalVotes += votes[k];
+    weighted += votes[k] * k;
+  }
+  const avg = totalVotes ? (weighted / totalVotes).toFixed(2) : 0;
+  await update(ref(db, "participants/" + id), { avg, total: totalVotes });
+}
+
+/* ====== Live Chart (Real-time Voting Graph) ====== */
+function listenLiveChart(id) {
+  if (liveChart) liveChart.destroy();
+  liveChart = new Chart(ctxLive, {
+    type: "bar",
+    data: {
+      labels: ["1 ⭐", "2 ⭐", "3 ⭐", "4 ⭐", "5 ⭐"],
+      datasets: [{
+        label: `Participant ${id} — Live Votes`,
+        data: [0, 0, 0, 0, 0],
+        backgroundColor: [
+          "#ff0000", "#ff6600", "#ffaa00", "#aaff00", "#00ff55"
+        ]
+      }]
+    },
+    options: {
+      scales: { y: { beginAtZero: true, max: 100 } },
+      animation: false,
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  const pRef = ref(db, `participants/${id}/votes`);
   onValue(pRef, (snap) => {
     if (!snap.exists()) return;
-    const data = snap.val().ratings || {1:0,2:0,3:0,4:0,5:0};
-    const totalVotes = Object.values(data).reduce((a,b)=>a+b,0) || 1;
-    const percentages = [1,2,3,4,5].map(i => ((data[i]||0)/totalVotes*100).toFixed(1));
-
-    const ctx = liveChartCanvas.getContext("2d");
-    if (liveChart) liveChart.destroy();
-
-    liveChart = new Chart(ctx, {
-      type: "bar",
-      data: {
-        labels: ["1 ⭐","2 ⭐","3 ⭐","4 ⭐","5 ⭐"],
-        datasets: [{
-          label: "% of Votes",
-          data: percentages,
-          backgroundColor: [
-            "rgba(255,50,50,0.8)",
-            "rgba(255,120,50,0.8)",
-            "rgba(255,200,50,0.8)",
-            "rgba(180,255,50,0.8)",
-            "rgba(50,255,120,0.8)"
-          ]
-        }]
-      },
-      options: {
-        scales: { y: { beginAtZero:true, max:100 } },
-        plugins: { legend:{ display:false } },
-        animation: false
-      }
-    });
+    const votes = snap.val();
+    const total = Object.values(votes).reduce((a, b) => a + b, 0);
+    const perc = total ? Object.values(votes).map(v => ((v / total) * 100).toFixed(1)) : [0,0,0,0,0];
+    liveChart.data.datasets[0].data = perc;
+    liveChart.update();
   });
 }
 
-/* ====== Final Leaderboard Chart ====== */
-onValue(ref(db, "participants"), (snap) => {
+/* ====== Admin Controls ====== */
+if (startPollBtn) startPollBtn.addEventListener("click", () => {
+  update(ref(db, "control"), { pollActive: true });
+});
+if (stopPollBtn) stopPollBtn.addEventListener("click", () => {
+  update(ref(db, "control"), { pollActive: false });
+});
+if (nextBtn) nextBtn.addEventListener("click", async () => {
+  const currentNum = parseInt(activeParticipant);
+  const nextNum = (currentNum % totalParticipants) + 1;
+  const nextId = String(nextNum).padStart(3, "0");
+  await update(ref(db, "control"), { activeParticipant: nextId, pollActive: false });
+});
+if (resetBtn) resetBtn.addEventListener("click", async () => {
+  if (!confirm("Reset everything?")) return;
+  await remove(ref(db));
+  await set(ref(db, "control"), { activeParticipant: "001", pollActive: false });
+  setupParticipants();
+});
+if (showLeaderboardBtn) showLeaderboardBtn.addEventListener("click", async () => {
+  voteSection.classList.add("hidden");
+  leaderboardSection.classList.remove("hidden");
+  renderLeaderboard();
+});
+
+/* ====== Leaderboard ====== */
+async function renderLeaderboard() {
+  const snap = await get(ref(db, "participants"));
   if (!snap.exists()) return;
-  const data = Object.entries(snap.val())
-    .map(([reg, val]) => ({ reg, avg: val.avg || 0 }))
-    .sort((a,b)=>b.avg-a.avg);
+  const list = Object.entries(snap.val())
+    .map(([id, v]) => ({ id, avg: parseFloat(v.avg), total: v.total }))
+    .sort((a, b) => b.avg - a.avg);
 
   leaderList.innerHTML = "";
-  data.forEach((p,i)=>{
-    const tr=document.createElement("tr");
-    tr.innerHTML=`<td>${i+1}</td><td>${p.reg}</td><td>${p.avg}</td>`;
+  list.forEach((p, i) => {
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${p.id}</td>
+      <td>${p.avg}</td>
+      <td>${p.total}</td>
+    `;
     leaderList.appendChild(tr);
   });
 
-  const ctx = leaderboardChartCanvas.getContext("2d");
   if (leaderboardChart) leaderboardChart.destroy();
-
-  leaderboardChart = new Chart(ctx, {
-    type:"bar",
-    data:{
-      labels:data.map(d=>d.reg),
-      datasets:[{
-        data:data.map(d=>((d.avg/5)*100).toFixed(1)),
-        backgroundColor:"rgba(255,140,0,0.8)"
+  leaderboardChart = new Chart(ctxLeader, {
+    type: "bar",
+    data: {
+      labels: list.map(p => p.id),
+      datasets: [{
+        label: "Average Rating (%)",
+        data: list.map(p => p.avg * 20),
+        backgroundColor: "#ff7b00"
       }]
     },
-    options:{
-      scales:{y:{beginAtZero:true,max:100}},
-      plugins:{legend:{display:false}},
-      animation:{duration:1000}
+    options: {
+      scales: { y: { beginAtZero: true, max: 100 } },
+      plugins: { legend: { display: false } }
     }
   });
-});
+}
