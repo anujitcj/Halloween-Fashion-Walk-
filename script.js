@@ -1,6 +1,5 @@
 /* ====== Firebase (v12.5.0 modular) ====== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-analytics.js";
 import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
 /* ====== Firebase Config ====== */
@@ -17,7 +16,6 @@ const firebaseConfig = {
 
 /* ====== Initialize Firebase ====== */
 const app = initializeApp(firebaseConfig);
-getAnalytics(app);
 const db = getDatabase(app);
 
 /* ====== Elements ====== */
@@ -33,9 +31,10 @@ const leaderList = document.getElementById("leaderList");
 const startPollBtn = document.getElementById("startPollBtn");
 const stopPollBtn = document.getElementById("stopPollBtn");
 const nextBtn = document.getElementById("nextBtn");
-const resetBtn = document.getElementById("resetAllBtn"); // ✅ fixed
+const resetBtn = document.getElementById("resetBtn");
 const showLeaderboardBtn = document.getElementById("showLeaderboardBtn");
 const adminMsg = document.getElementById("adminMsg");
+const adminCurrent = document.getElementById("adminCurrent");
 
 let currentNum = 1;
 let pollActive = false;
@@ -65,6 +64,7 @@ startPollBtn.onclick = async () => {
   leaderboardSection.classList.add("hidden");
   voteRegNumber.textContent = number;
   currentParticipant.textContent = `Participant ${number}`;
+  adminCurrent.textContent = number;
   await set(ref(db, "current"), { active: true, number: currentNum });
   adminMsg.textContent = `Poll started for ${number}`;
 };
@@ -100,6 +100,7 @@ resetBtn.onclick = async () => {
       currentNum = 1;
       pollActive = false;
       currentParticipant.textContent = "Awaiting next performance…";
+      adminCurrent.textContent = "None";
       voteSection.classList.add("hidden");
       adminMsg.textContent = "✅ All data reset successfully.";
       alert("All votes and data cleared!");
@@ -120,26 +121,27 @@ voteBtns.forEach(btn => {
     const value = Number(btn.dataset.value);
     const num = currentNum.toString().padStart(3, "0");
 
-    const snap = await get(ref(db, `votes/${num}`));
-    let data = snap.exists() ? snap.val() : { total: 0, count: 0 };
-
-    data.total += value;
-    data.count += 1;
-
-    await set(ref(db, `votes/${num}`), data);
-    voteMsg.textContent = "✅ Vote submitted!";
-    setTimeout(() => (voteMsg.textContent = ""), 1500);
+    try {
+      const snap = await get(ref(db, `votes/${num}`));
+      let data = snap.exists() ? snap.val() : { total: 0, count: 0 };
+      data.total += value;
+      data.count += 1;
+      await set(ref(db, `votes/${num}`), data);
+      voteMsg.textContent = "✅ Vote submitted!";
+      setTimeout(() => (voteMsg.textContent = ""), 1500);
+    } catch (err) {
+      console.error("Vote error:", err);
+      voteMsg.textContent = "⚠️ Error submitting vote.";
+    }
   };
 });
 
 /* ====== Show Leaderboard ====== */
-if (showLeaderboardBtn) {
-  showLeaderboardBtn.onclick = () => {
-    leaderboardSection.classList.remove("hidden");
-    adminPanel.classList.add("hidden");
-    updateLeaderboard();
-  };
-}
+showLeaderboardBtn.onclick = () => {
+  leaderboardSection.classList.remove("hidden");
+  adminPanel.classList.add("hidden");
+  updateLeaderboard();
+};
 
 /* ====== Real-time Leaderboard ====== */
 function updateLeaderboard() {
@@ -152,16 +154,15 @@ function updateLeaderboard() {
       votes: v.count || 0
     }));
     arr.sort((a, b) => b.avg - a.avg);
-
     leaderList.innerHTML = arr
       .map(
         (p, i) => `
-        <tr>
-          <td>${i + 1}</td>
-          <td>${p.id}</td>
-          <td>${p.avg}</td>
-          <td>${p.votes}</td>
-        </tr>`
+          <tr>
+            <td>${i + 1}</td>
+            <td>${p.id}</td>
+            <td>${p.avg}</td>
+            <td>${p.votes}</td>
+          </tr>`
       )
       .join("");
   });
@@ -176,10 +177,10 @@ onValue(ref(db, "current"), snap => {
     pollActive = false;
   } else {
     voteSection.classList.remove("hidden");
-    voteRegNumber.textContent = val.number.toString().padStart(3, "0");
-    currentParticipant.textContent = `Participant ${val.number
-      .toString()
-      .padStart(3, "0")}`;
+    const num = val.number.toString().padStart(3, "0");
+    voteRegNumber.textContent = num;
+    currentParticipant.textContent = `Participant ${num}`;
     pollActive = true;
+    currentNum = val.number;
   }
 });
