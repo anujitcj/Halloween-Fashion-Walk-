@@ -41,6 +41,7 @@ let pollActive = false;
 let adminMode = false;
 const MAX_PARTICIPANTS = 30;
 let resultChart;
+let chartDrawnFor = null;
 
 /* ====== Admin PIN (Ctrl + B) ====== */
 document.addEventListener("keydown", e => {
@@ -50,7 +51,9 @@ document.addEventListener("keydown", e => {
       adminMode = true;
       adminPanel.classList.remove("hidden");
       alert("✅ Admin mode activated!");
-    } else alert("❌ Wrong PIN");
+    } else {
+      alert("❌ Wrong PIN");
+    }
   }
 });
 
@@ -58,6 +61,7 @@ document.addEventListener("keydown", e => {
 startPollBtn.onclick = async () => {
   if (!adminMode) return;
   pollActive = true;
+  chartDrawnFor = null;
   const number = currentNum.toString().padStart(3, "0");
   voteSection.classList.remove("hidden");
   leaderboardSection.classList.add("hidden");
@@ -141,7 +145,7 @@ voteBtns.forEach(btn => {
 /* ====== Leaderboard ====== */
 showLeaderboardBtn.onclick = async () => {
   if (!adminMode) return;
-  await set(ref(db, "leaderboardVisible"), true); // 🔥 show for all users
+  await set(ref(db, "leaderboardVisible"), true); // visible for all viewers
   adminPanel.classList.add("hidden");
   adminMsg.textContent = "📊 Leaderboard displayed to all viewers.";
   updateLeaderboard();
@@ -154,27 +158,41 @@ function updateLeaderboard() {
     const results = Object.entries(data).map(([id, v]) => {
       const ratings = v.ratings || {};
       const totalVotes = Object.values(ratings).reduce((a, b) => a + b, 0);
-      const percentages = [1, 2, 3, 4, 5].map(
-        n => ((ratings[n] || 0) / (totalVotes || 1) * 100).toFixed(0)
-      );
-      return { id, totalVotes, percentages };
+      const avg =
+        totalVotes > 0
+          ? (
+              Object.entries(ratings).reduce(
+                (sum, [key, val]) => sum + key * val,
+                0
+              ) / totalVotes
+            ).toFixed(2)
+          : 0;
+      return { id, totalVotes, avg };
     });
 
-    results.sort((a, b) => b.totalVotes - a.totalVotes);
-    leaderList.innerHTML = results.map((r, i) => `
+    results.sort((a, b) => b.avg - a.avg);
+    leaderList.innerHTML = results
+      .map(
+        (r, i) => `
       <tr>
         <td>${i + 1}</td>
         <td>${r.id}</td>
+        <td>${r.avg}</td>
         <td>${r.totalVotes}</td>
-        ${r.percentages.map(p => `<td>${p}%</td>`).join("")}
-      </tr>
-    `).join("");
+      </tr>`
+      )
+      .join("");
   });
 }
 
-/* ====== Show Participant Result Chart ====== */
+/* ====== Show Participant Result Chart (Fixed) ====== */
 async function showResultChart(num) {
   const number = num.toString().padStart(3, "0");
+
+  // prevent duplicate chart rendering
+  if (chartDrawnFor === number) return;
+  chartDrawnFor = number;
+
   resultRegNumber.textContent = number;
   resultSection.classList.remove("hidden");
 
@@ -186,21 +204,37 @@ async function showResultChart(num) {
   );
 
   const ctx = document.getElementById("resultChart").getContext("2d");
-  if (resultChart) resultChart.destroy();
+  if (resultChart && typeof resultChart.destroy === "function") {
+    resultChart.destroy();
+  }
+
   resultChart = new Chart(ctx, {
     type: "bar",
     data: {
       labels: ["1", "2", "3", "4", "5"],
-      datasets: [{
-        label: "Vote % Distribution",
-        data: percentages,
-        backgroundColor: ["#ff6347", "#ffa500", "#ffd700", "#adff2f", "#32cd32"]
-      }]
+      datasets: [
+        {
+          label: "Vote % Distribution",
+          data: percentages,
+          backgroundColor: [
+            "#ff6347",
+            "#ffa500",
+            "#ffd700",
+            "#adff2f",
+            "#32cd32"
+          ]
+        }
+      ]
     },
     options: {
       indexAxis: "y",
+      animation: { duration: 500 },
       scales: {
-        x: { beginAtZero: true, max: 100, title: { display: true, text: "Percentage (%)" } },
+        x: {
+          beginAtZero: true,
+          max: 100,
+          title: { display: true, text: "Percentage (%)" }
+        },
         y: { title: { display: true, text: "Ratings" } }
       },
       plugins: { legend: { display: false } },
@@ -215,15 +249,20 @@ onValue(ref(db, "current"), async snap => {
   const val = snap.val();
   if (!val) return;
   currentNum = val.number;
+
   if (val.active) {
+    // voting mode
+    chartDrawnFor = null;
     resultSection.classList.add("hidden");
     leaderboardSection.classList.add("hidden");
     voteSection.classList.remove("hidden");
+
     const num = val.number.toString().padStart(3, "0");
     voteRegNumber.textContent = num;
     currentParticipant.textContent = `Participant ${num}`;
     pollActive = true;
   } else {
+    // result mode
     pollActive = false;
     voteSection.classList.add("hidden");
     currentParticipant.textContent = `Showing results for ${val.number
