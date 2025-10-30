@@ -1,127 +1,89 @@
 body {
-  font-family: "Poppins", sans-serif;
-  background: radial-gradient(circle at top left, #1a0a00 10%, #000 90%);
+  font-family: 'Poppins', sans-serif;
+  background: #0b0b0f;
   color: #fff;
   margin: 0;
+  padding: 0;
   text-align: center;
 }
 
 .hero {
-  padding: 1.5rem;
+  background: linear-gradient(45deg, #ff6600, #ff3300);
+  padding: 20px 10px;
+  color: #fff;
+  text-shadow: 1px 1px 3px #000;
 }
-.hero h1 {
-  color: #ff7b00;
-  text-shadow: 0 0 10px #ff7b00;
-  font-size: 1.6rem;
-  margin-bottom: 0.3rem;
-}
-.hero h2 {
-  color: #ccc;
-  font-size: 1rem;
+
+h1 {
+  margin: 0;
+  font-size: 1.8rem;
 }
 
 .card {
-  background: rgba(30, 30, 30, 0.9);
-  border: 1px solid #ff7b00;
-  border-radius: 14px;
-  box-shadow: 0 0 15px rgba(255,123,0,0.3);
-  margin: 1rem auto;
-  padding: 1.5rem;
-  max-width: 600px;
+  background: #1a1a1f;
+  border-radius: 15px;
+  margin: 20px auto;
+  padding: 20px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 0 20px #ff6600aa;
 }
 
 .vote-options {
   display: flex;
   justify-content: center;
-  flex-wrap: wrap;
   gap: 10px;
-  margin-top: 10px;
+  margin: 15px 0;
 }
-.vote-options button {
-  background: #ff7b00;
-  border: none;
-  color: #000;
-  padding: 12px 18px;
+
+.voteBtn {
+  background: #222;
+  color: #fff;
+  border: 2px solid #ff6600;
+  border-radius: 50%;
+  width: 45px;
+  height: 45px;
   font-size: 1.1rem;
-  border-radius: 10px;
-  cursor: pointer;
   transition: 0.2s;
 }
-.vote-options button:hover {
-  background: #ffa34d;
-  transform: scale(1.1);
-}
 
-.msg {
-  margin-top: 10px;
-  color: #ffb84d;
-  font-size: 0.95rem;
-}
-
-.table {
-  width: 100%;
-}
-.leader-table {
-  width: 100%;
-  border-collapse: collapse;
-  color: #fff;
-}
-.leader-table th {
-  background: #ff7b00;
+.voteBtn:hover {
+  background: #ff6600;
   color: #000;
-  padding: 8px;
-}
-.leader-table td {
-  border-bottom: 1px solid rgba(255,255,255,0.2);
-  padding: 6px;
 }
 
 .btn {
   border: none;
   padding: 10px 15px;
-  font-size: 1rem;
-  border-radius: 8px;
+  border-radius: 6px;
+  margin: 5px;
   cursor: pointer;
 }
-.btn-primary {
-  background: #ff7b00;
-  color: #000;
-}
-.btn-secondary {
-  background: #444;
-  color: #fff;
-}
-.btn-ghost {
-  background: transparent;
-  color: #ff7b00;
-  border: 1px solid #ff7b00;
-}
+
+.btn-primary { background: #ff6600; color: #000; }
+.btn-secondary { background: #555; }
+.btn-ghost { background: transparent; border: 1px solid #ff6600; color: #ff6600; }
+.btn-danger { background: #cc0000; color: #fff; }
+
+.hidden { display: none; }
 
 .site-footer {
+  margin: 30px 0;
   font-size: 0.8rem;
-  color: rgba(255,255,255,0.3);
+  opacity: 0.8;
+}
+
+.leader-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.leader-table th, .leader-table td {
+  border-bottom: 1px solid #444;
+  padding: 8px;
+}
+
+.chart-container {
   margin-top: 20px;
-}
-.site-footer a {
-  color: #ff7b00;
-  text-decoration: none;
-}
-
-.hidden {
-  display: none !important;
-}
-
-/* Mobile Responsive */
-@media (max-width: 600px) {
-  .card {
-    margin: 0.8rem;
-    padding: 1.2rem;
-  }
-  .vote-options button {
-    flex: 1 1 30%;
-    font-size: 1rem;
-  }
-  .hero h1 {
-    font-size: 1.3rem;
-  }
 }
