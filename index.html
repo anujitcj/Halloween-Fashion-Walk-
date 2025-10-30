@@ -5,31 +5,52 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>SSMRV Halloween Fashion Walk 2025 — Live Voting</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    .chart-container {
+      width: 100%;
+      max-width: 650px;
+      margin: 20px auto;
+    }
+    canvas {
+      width: 100% !important;
+      height: 320px !important;
+    }
+    .hidden { display: none; }
+  </style>
 </head>
 <body>
   <main class="site">
+    <!-- ====== HEADER ====== -->
     <header class="hero">
       <h1>Halloween Costume Carnival 2025</h1>
       <h2 id="currentParticipant">Awaiting next performance…</h2>
     </header>
 
-    <!-- Audience Voting Card -->
+    <!-- ====== AUDIENCE VOTING SECTION ====== -->
     <section id="voteSection" class="card hidden">
       <h2>Vote for Participant <span id="voteRegNumber"></span></h2>
       <p>Rate the performance from 1 (worst) to 5 (best)</p>
+
       <div class="vote-options">
-        <button class="voteBtn" data-value="1">1</button>
-        <button class="voteBtn" data-value="2">2</button>
-        <button class="voteBtn" data-value="3">3</button>
-        <button class="voteBtn" data-value="4">4</button>
-        <button class="voteBtn" data-value="5">5</button>
+        <button class="voteBtn" data-value="1">1 ⭐</button>
+        <button class="voteBtn" data-value="2">2 ⭐</button>
+        <button class="voteBtn" data-value="3">3 ⭐</button>
+        <button class="voteBtn" data-value="4">4 ⭐</button>
+        <button class="voteBtn" data-value="5">5 ⭐</button>
       </div>
+
       <p id="voteMsg" class="msg"></p>
+
+      <!-- 🟠 LIVE VOTING BAR GRAPH -->
+      <div class="chart-container">
+        <canvas id="liveChart"></canvas>
+      </div>
     </section>
 
-    <!-- Leaderboard -->
-    <section id="leaderboard" class="card">
-      <h2>Live Leaderboard</h2>
+    <!-- ====== FINAL LEADERBOARD ====== -->
+    <section id="leaderboard" class="card hidden">
+      <h2>Final Leaderboard</h2>
+
       <table class="leader-table">
         <thead>
           <tr>
@@ -47,27 +68,29 @@
       </div>
     </section>
 
-    <!-- Admin Panel -->
+    <!-- ====== ADMIN CONTROL PANEL ====== -->
     <section id="adminPanel" class="card hidden">
       <h2>Admin Control Panel</h2>
       <p>Current Participant: <span id="adminCurrent">None</span></p>
+
       <div class="form-actions">
         <button id="startPollBtn" class="btn btn-primary">▶️ Start Poll</button>
         <button id="stopPollBtn" class="btn btn-secondary">⏹ Stop Poll</button>
         <button id="nextBtn" class="btn btn-ghost">➡️ Next Participant</button>
       </div>
+
       <p id="adminMsg" class="msg"></p>
     </section>
 
+    <!-- ====== FOOTER ====== -->
     <footer class="site-footer">
       Developed & managed by 
       <a href="https://github.com/anujitcj" target="_blank">anujitcj/github.com</a>
     </footer>
   </main>
 
-  <!-- Chart.js -->
+  <!-- ====== SCRIPTS ====== -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- Firebase -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
