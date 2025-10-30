@@ -1,8 +1,7 @@
-/* ====== Firebase (v12.5.0 modular) ====== */
+/* ====== Firebase Setup ====== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
 import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-/* ====== Firebase Config ====== */
 const firebaseConfig = {
   apiKey: "AIzaSyCF-3Zu4tuhrrhH9PTx6-pfyJDLszRIqOk",
   authDomain: "halloween-fashion-walk.firebaseapp.com",
@@ -14,18 +13,19 @@ const firebaseConfig = {
   measurementId: "G-YWWSQ63KN5"
 };
 
-/* ====== Initialize Firebase ====== */
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
 
 /* ====== Elements ====== */
 const voteSection = document.getElementById("voteSection");
 const leaderboardSection = document.getElementById("leaderboard");
+const resultSection = document.getElementById("resultSection");
 const adminPanel = document.getElementById("adminPanel");
 const currentParticipant = document.getElementById("currentParticipant");
 const voteBtns = document.querySelectorAll(".voteBtn");
 const voteMsg = document.getElementById("voteMsg");
 const voteRegNumber = document.getElementById("voteRegNumber");
+const resultRegNumber = document.getElementById("resultRegNumber");
 const leaderList = document.getElementById("leaderList");
 
 const startPollBtn = document.getElementById("startPollBtn");
@@ -40,6 +40,7 @@ let currentNum = 1;
 let pollActive = false;
 let adminMode = false;
 const MAX_PARTICIPANTS = 30;
+let resultChart;
 
 /* ====== Admin PIN (Ctrl + B) ====== */
 document.addEventListener("keydown", e => {
@@ -49,9 +50,7 @@ document.addEventListener("keydown", e => {
       adminMode = true;
       adminPanel.classList.remove("hidden");
       alert("✅ Admin mode activated!");
-    } else {
-      alert("❌ Wrong PIN");
-    }
+    } else alert("❌ Wrong PIN");
   }
 });
 
@@ -62,6 +61,7 @@ startPollBtn.onclick = async () => {
   const number = currentNum.toString().padStart(3, "0");
   voteSection.classList.remove("hidden");
   leaderboardSection.classList.add("hidden");
+  resultSection.classList.add("hidden");
   voteRegNumber.textContent = number;
   currentParticipant.textContent = `Participant ${number}`;
   adminCurrent.textContent = number;
@@ -76,6 +76,7 @@ stopPollBtn.onclick = async () => {
   await update(ref(db, "current"), { active: false });
   voteSection.classList.add("hidden");
   adminMsg.textContent = "Poll stopped.";
+  showResultChart(currentNum);
 };
 
 /* ====== Next Participant ====== */
@@ -83,7 +84,6 @@ nextBtn.onclick = () => {
   if (!adminMode) return;
   if (currentNum < MAX_PARTICIPANTS) {
     currentNum++;
-    adminMsg.textContent = `Moved to ${currentNum.toString().padStart(3, "0")}`;
     startPollBtn.click();
   } else {
     adminMsg.textContent = "All participants completed.";
@@ -94,77 +94,104 @@ nextBtn.onclick = () => {
 resetBtn.onclick = async () => {
   if (!adminMode) return;
   if (confirm("⚠️ Reset EVERYTHING (votes & poll progress)?")) {
-    try {
-      await remove(ref(db, "votes"));
-      await remove(ref(db, "current"));
-      currentNum = 1;
-      pollActive = false;
-      currentParticipant.textContent = "Awaiting next performance…";
-      adminCurrent.textContent = "None";
-      voteSection.classList.add("hidden");
-      adminMsg.textContent = "✅ All data reset successfully.";
-      alert("All votes and data cleared!");
-    } catch (err) {
-      console.error("Reset failed:", err);
-      alert("Error while resetting data. Check Firebase rules.");
-    }
+    await remove(ref(db, "votes"));
+    await remove(ref(db, "current"));
+    currentNum = 1;
+    pollActive = false;
+    currentParticipant.textContent = "Awaiting next performance…";
+    adminCurrent.textContent = "None";
+    voteSection.classList.add("hidden");
+    resultSection.classList.add("hidden");
+    adminMsg.textContent = "✅ All data reset successfully.";
+    alert("All votes and data cleared!");
   }
 };
 
-/* ====== Audience Vote Buttons ====== */
+/* ====== Voting Buttons ====== */
 voteBtns.forEach(btn => {
   btn.onclick = async () => {
     if (!pollActive) {
       voteMsg.textContent = "⛔ Poll not active right now.";
       return;
     }
+
     const value = Number(btn.dataset.value);
     const num = currentNum.toString().padStart(3, "0");
+    const voteRef = ref(db, `votes/${num}/ratings/${value}`);
 
-    try {
-      const snap = await get(ref(db, `votes/${num}`));
-      let data = snap.exists() ? snap.val() : { total: 0, count: 0 };
-      data.total += value;
-      data.count += 1;
-      await set(ref(db, `votes/${num}`), data);
-      voteMsg.textContent = "✅ Vote submitted!";
-      setTimeout(() => (voteMsg.textContent = ""), 1500);
-    } catch (err) {
-      console.error("Vote error:", err);
-      voteMsg.textContent = "⚠️ Error submitting vote.";
-    }
+    const snap = await get(voteRef);
+    const count = snap.exists() ? snap.val() + 1 : 1;
+    await set(voteRef, count);
+
+    voteMsg.textContent = "✅ Vote submitted!";
+    setTimeout(() => (voteMsg.textContent = ""), 1500);
   };
 });
 
-/* ====== Show Leaderboard ====== */
+/* ====== Leaderboard ====== */
 showLeaderboardBtn.onclick = () => {
   leaderboardSection.classList.remove("hidden");
   adminPanel.classList.add("hidden");
   updateLeaderboard();
 };
 
-/* ====== Real-time Leaderboard ====== */
 function updateLeaderboard() {
   onValue(ref(db, "votes"), snapshot => {
     leaderList.innerHTML = "";
     const data = snapshot.val() || {};
-    const arr = Object.entries(data).map(([id, v]) => ({
-      id,
-      avg: v.count ? (v.total / v.count).toFixed(2) : "0.00",
-      votes: v.count || 0
-    }));
-    arr.sort((a, b) => b.avg - a.avg);
-    leaderList.innerHTML = arr
-      .map(
-        (p, i) => `
-          <tr>
-            <td>${i + 1}</td>
-            <td>${p.id}</td>
-            <td>${p.avg}</td>
-            <td>${p.votes}</td>
-          </tr>`
-      )
-      .join("");
+    const results = Object.entries(data).map(([id, v]) => {
+      const ratings = v.ratings || {};
+      const totalVotes = Object.values(ratings).reduce((a, b) => a + b, 0);
+      const percentages = [1, 2, 3, 4, 5].map(
+        n => ((ratings[n] || 0) / (totalVotes || 1) * 100).toFixed(0)
+      );
+      return { id, totalVotes, percentages };
+    });
+
+    results.sort((a, b) => b.totalVotes - a.totalVotes);
+    leaderList.innerHTML = results.map((r, i) => `
+      <tr>
+        <td>${i + 1}</td>
+        <td>${r.id}</td>
+        <td>${r.totalVotes}</td>
+        ${r.percentages.map(p => `<td>${p}%</td>`).join("")}
+      </tr>
+    `).join("");
+  });
+}
+
+/* ====== Show Participant Result Chart ====== */
+async function showResultChart(num) {
+  const number = num.toString().padStart(3, "0");
+  resultRegNumber.textContent = number;
+  resultSection.classList.remove("hidden");
+
+  const snap = await get(ref(db, `votes/${number}/ratings`));
+  const ratings = snap.exists() ? snap.val() : {};
+  const total = Object.values(ratings).reduce((a, b) => a + b, 0);
+  const percentages = [1, 2, 3, 4, 5].map(
+    n => ((ratings[n] || 0) / (total || 1) * 100).toFixed(1)
+  );
+
+  const ctx = document.getElementById("resultChart").getContext("2d");
+  if (resultChart) resultChart.destroy();
+  resultChart = new Chart(ctx, {
+    type: "bar",
+    data: {
+      labels: ["1", "2", "3", "4", "5"],
+      datasets: [{
+        label: "Vote % Distribution",
+        data: percentages,
+        backgroundColor: "#ff7f50"
+      }]
+    },
+    options: {
+      scales: {
+        y: { beginAtZero: true, max: 100, title: { display: true, text: "Percentage (%)" } },
+        x: { title: { display: true, text: "Ratings" } }
+      },
+      plugins: { legend: { display: false } }
+    }
   });
 }
 
