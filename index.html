@@ -3,90 +3,72 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SSMRV — Halloween Fashion Walk 2025 (Live Voting)</title>
+  <title>SSMRV Halloween Fashion Walk 2025 — Live Voting</title>
   <link rel="stylesheet" href="style.css" />
-  <!-- small inline helper so it works immediately -->
-  <style>
-    .hidden{display:none!important}
-    canvas{width:100% !important; height:280px !important}
-  </style>
 </head>
 <body>
-  <main class="wrap">
-    <header class="topbar">
-      <div>
-        <h1>Halloween Costume Carnival 2025</h1>
-        <p id="currentParticipant" class="muted">Awaiting next performance…</p>
-      </div>
-      <div class="hint muted">Admin: Ctrl + B</div>
+  <main class="site">
+    <header class="hero">
+      <h1>Halloween Costume Carnival 2025</h1>
+      <h2 id="currentParticipant">Awaiting next performance…</h2>
     </header>
 
-    <!-- Live voting card -->
-    <section id="voteCard" class="card hidden">
-      <div class="card-head">
-        <h2>Vote — Participant <span id="voteReg">---</span></h2>
-        <p class="muted">Choose 1 (worst) → 5 (best). One vote per device / participant.</p>
-      </div>
-
-      <div class="vote-row">
+    <!-- ====== Audience Voting ====== -->
+    <section id="voteSection" class="card hidden">
+      <h2>Vote for Participant <span id="voteRegNumber"></span></h2>
+      <p>Rate this performance from 1 ⭐ (worst) to 5 ⭐ (best)</p>
+      <div class="vote-options">
         <button class="voteBtn" data-value="1">1 ⭐</button>
         <button class="voteBtn" data-value="2">2 ⭐</button>
         <button class="voteBtn" data-value="3">3 ⭐</button>
         <button class="voteBtn" data-value="4">4 ⭐</button>
         <button class="voteBtn" data-value="5">5 ⭐</button>
       </div>
-
       <p id="voteMsg" class="msg"></p>
-
-      <div class="chart-wrap">
-        <canvas id="liveChart"></canvas>
-      </div>
     </section>
 
-    <!-- Leaderboard (final/results) -->
-    <section id="leaderboardCard" class="card hidden">
+    <!-- ====== Leaderboard ====== -->
+    <section id="leaderboard" class="card hidden">
       <h2>Final Leaderboard</h2>
-      <table class="leader-table" aria-live="polite">
+      <table class="leader-table">
         <thead>
-          <tr><th>Rank</th><th>Reg</th><th>Avg</th><th>Votes</th></tr>
+          <tr>
+            <th>Rank</th>
+            <th>Reg. No</th>
+            <th>Avg. Rating</th>
+            <th>Total Votes</th>
+          </tr>
         </thead>
         <tbody id="leaderList"></tbody>
       </table>
 
-      <div class="chart-wrap">
+      <div class="chart-container">
         <canvas id="leaderboardChart"></canvas>
       </div>
     </section>
 
-    <!-- Admin panel (hidden) -->
-    <aside id="adminPanel" class="admin card hidden" aria-hidden="true">
-      <h3>Admin Controls</h3>
-      <div class="admin-row">
-        <div>Current: <strong id="adminCurrent">—</strong></div>
-        <div class="muted small">Use Ctrl + B → enter PIN</div>
+    <!-- ====== Admin Panel ====== -->
+    <section id="adminPanel" class="card hidden">
+      <h2>Admin Control Panel</h2>
+      <p>Current Participant: <span id="adminCurrent">None</span></p>
+      <div class="form-actions">
+        <button id="startPollBtn" class="btn btn-primary">▶️ Start Poll</button>
+        <button id="stopPollBtn" class="btn btn-secondary">⏹ Stop Poll</button>
+        <button id="nextBtn" class="btn btn-ghost">➡️ Next</button>
+        <button id="resetBtn" class="btn btn-secondary">♻️ Reset</button>
+        <button id="showLeaderboardBtn" class="btn btn-primary">🏁 Leaderboard</button>
       </div>
-
-      <div class="admin-actions">
-        <button id="startBtn" class="btn primary">▶ Start</button>
-        <button id="stopBtn" class="btn">⏹ Stop</button>
-        <button id="nextBtn" class="btn">➡ Next</button>
-      </div>
-
-      <div class="admin-actions" style="margin-top:10px">
-        <button id="resetBtn" class="btn warn">♻ Reset All</button>
-        <button id="showBtn" class="btn primary">🏁 Show Leaderboard</button>
-        <button id="hideBtn" class="btn" style="display:none">🙈 Hide Leaderboard</button>
-      </div>
-
       <p id="adminMsg" class="msg"></p>
-    </aside>
+    </section>
 
-    <footer class="foot">Website managed by <a href="https://github.com/anujitcj" target="_blank">anujitcj</a></footer>
+    <footer class="site-footer">
+      Developed & managed by 
+      <a href="https://github.com/anujitcj" target="_blank">anujitcj/github.com</a>
+    </footer>
   </main>
 
-  <!-- Chart.js -->
+  <!-- ====== LIBRARIES ====== -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <!-- main script (module) -->
   <script type="module" src="script.js"></script>
 </body>
 </html>
