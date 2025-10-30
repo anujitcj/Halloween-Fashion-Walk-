@@ -1,39 +1,66 @@
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600&display=swap');
+
 body {
-  font-family: 'Poppins', sans-serif;
-  background: #0b0b0f;
+  font-family: 'Montserrat', sans-serif;
+  background: radial-gradient(circle at top, #0b0b0f, #000);
   color: #fff;
   margin: 0;
   padding: 0;
   text-align: center;
+  overflow-x: hidden;
 }
 
+/* Spiderweb header */
 .hero {
   background: linear-gradient(45deg, #ff6600, #ff3300);
-  padding: 20px 10px;
+  padding: 25px 10px;
   color: #fff;
-  text-shadow: 1px 1px 3px #000;
+  text-shadow: 2px 2px 4px #000;
+  position: relative;
+}
+.hero::before {
+  content: "🕸️";
+  position: absolute;
+  top: 10px;
+  left: 15px;
+  font-size: 2rem;
+  opacity: 0.8;
+}
+.hero::after {
+  content: "🕷️";
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 1.8rem;
+  opacity: 0.8;
 }
 
 h1 {
   margin: 0;
   font-size: 1.8rem;
+  letter-spacing: 1px;
 }
 
 .card {
-  background: #1a1a1f;
-  border-radius: 15px;
+  background: rgba(30, 30, 40, 0.95);
+  border-radius: 16px;
   margin: 20px auto;
   padding: 20px;
-  width: 90%;
-  max-width: 500px;
-  box-shadow: 0 0 20px #ff6600aa;
+  width: 92%;
+  max-width: 550px;
+  box-shadow: 0 0 25px #ff6600aa;
+  backdrop-filter: blur(4px);
+  transition: transform 0.2s;
+}
+.card:hover {
+  transform: scale(1.01);
 }
 
 .vote-options {
   display: flex;
   justify-content: center;
   gap: 10px;
-  margin: 15px 0;
+  margin: 20px 0;
 }
 
 .voteBtn {
@@ -41,35 +68,36 @@ h1 {
   color: #fff;
   border: 2px solid #ff6600;
   border-radius: 50%;
-  width: 45px;
-  height: 45px;
-  font-size: 1.1rem;
-  transition: 0.2s;
+  width: 50px;
+  height: 50px;
+  font-size: 1.2rem;
+  transition: 0.25s;
 }
-
 .voteBtn:hover {
   background: #ff6600;
   color: #000;
+  transform: scale(1.1);
 }
 
 .btn {
   border: none;
-  padding: 10px 15px;
+  padding: 10px 16px;
   border-radius: 6px;
   margin: 5px;
   cursor: pointer;
+  font-weight: 600;
+  transition: 0.2s;
 }
-
 .btn-primary { background: #ff6600; color: #000; }
-.btn-secondary { background: #555; }
+.btn-secondary { background: #666; color: #fff; }
 .btn-ghost { background: transparent; border: 1px solid #ff6600; color: #ff6600; }
 .btn-danger { background: #cc0000; color: #fff; }
 
 .hidden { display: none; }
 
 .site-footer {
-  margin: 30px 0;
-  font-size: 0.8rem;
+  margin: 35px 0;
+  font-size: 0.85rem;
   opacity: 0.8;
 }
 
@@ -78,12 +106,13 @@ h1 {
   border-collapse: collapse;
   margin-top: 10px;
 }
-
 .leader-table th, .leader-table td {
   border-bottom: 1px solid #444;
   padding: 8px;
 }
 
 .chart-container {
-  margin-top: 20px;
+  position: relative;
+  margin-top: 25px;
+  height: 250px;
 }
