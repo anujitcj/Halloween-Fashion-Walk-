@@ -10,7 +10,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Spiderweb header */
 .hero {
   background: linear-gradient(45deg, #ff6600, #ff3300);
   padding: 25px 10px;
@@ -35,11 +34,7 @@ body {
   opacity: 0.8;
 }
 
-h1 {
-  margin: 0;
-  font-size: 1.8rem;
-  letter-spacing: 1px;
-}
+h1 { margin: 0; font-size: 1.8rem; letter-spacing: 1px; }
 
 .card {
   background: rgba(30, 30, 40, 0.95);
@@ -52,9 +47,7 @@ h1 {
   backdrop-filter: blur(4px);
   transition: transform 0.2s;
 }
-.card:hover {
-  transform: scale(1.01);
-}
+.card:hover { transform: scale(1.01); }
 
 .vote-options {
   display: flex;
@@ -113,6 +106,8 @@ h1 {
 
 .chart-container {
   position: relative;
-  margin-top: 25px;
-  height: 250px;
+  width: 100%;
+  max-width: 500px;
+  height: 300px; /* 🔥 Fixed height prevents infinite canvas growth */
+  margin: 0 auto;
 }
