@@ -3,111 +3,71 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SSMRV College — Halloween Costume Carnival 2025</title>
+  <title>SSMRV Halloween Fashion Walk 2025 — Live Voting</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <main class="site">
     <header class="hero">
-      <div class="hero-inner">
-        <div class="title-block">
-          <div class="small">SSMRV College — BBA Department</div>
-          <h1>Halloween Costume Carnival 2025</h1>
-        </div>
-        <div class="actions">
-          <button id="registerBtn" class="btn btn-primary">Register</button>
-          <button id="voteBtn" class="btn btn-primary">Vote</button>
-          <button id="leaderboardBtn" class="btn btn-ghost">Leaderboard</button>
-        </div>
-      </div>
+      <h1>Halloween Costume Carnival 2025</h1>
+      <h2 id="currentParticipant">Awaiting next performance…</h2>
     </header>
 
-    <section class="content">
-     <!-- Registration Card -->
-<div id="registerForm" class="card hidden">
-  <h2>Participant Registration</h2>
-  <div class="form-row">
-    <label>Name
-      <input type="text" id="participantName" placeholder="e.g. Priya Sharma" />
-    </label>
-  </div>
-  <div class="form-row">
-    <label>Class & Section
-      <input type="text" id="classSection" placeholder="e.g. BBA 'A' III Sem" />
-    </label>
-  </div>
-  <div class="form-actions">
-    <button id="submitRegister" class="btn btn-primary">Submit Registration</button>
-    <button id="regBack" class="btn btn-ghost">Back</button>
-  </div>
-  <p id="registerMsg" class="msg"></p>
-</div>
+    <!-- Audience Voting Card -->
+    <section id="voteSection" class="card hidden">
+      <h2>Vote for Participant <span id="voteRegNumber"></span></h2>
+      <p>Rate the performance from 1 (worst) to 5 (best)</p>
+      <div class="vote-options">
+        <button class="voteBtn" data-value="1">1</button>
+        <button class="voteBtn" data-value="2">2</button>
+        <button class="voteBtn" data-value="3">3</button>
+        <button class="voteBtn" data-value="4">4</button>
+        <button class="voteBtn" data-value="5">5</button>
+      </div>
+      <p id="voteMsg" class="msg"></p>
+    </section>
 
+    <!-- Leaderboard -->
+    <section id="leaderboard" class="card">
+      <h2>Live Leaderboard</h2>
+      <table class="leader-table">
+        <thead>
+          <tr>
+            <th>Rank</th>
+            <th>Reg. No</th>
+            <th>Avg. Rating</th>
+            <th>Total Votes</th>
+          </tr>
+        </thead>
+        <tbody id="leaderList"></tbody>
+      </table>
 
-      <!-- Vote Card -->
-     <!-- Vote Card -->
-<div id="voteForm" class="card hidden">
-  <h2>Vote — Choose One Participant</h2>
-  <div class="table-wrap">
-    <table id="voteTable" class="vote-table" aria-live="polite">
-      <thead>
-        <tr>
-          <th>Reg. No</th>
-          <th>Name</th>
-          <th>Class</th>
-          <th>Vote</th>
-        </tr>
-      </thead>
-      <tbody id="teamList">
-        <!-- rows injected dynamically -->
-      </tbody>
-    </table>
-  </div>
-  <div class="form-actions">
-    <button id="submitVote" class="btn btn-primary">Submit Vote</button>
-    <button id="voteBack" class="btn btn-ghost">Back</button>
-  </div>
-  <p id="voteMsg" class="msg"></p>
-</div>
+      <div class="chart-container">
+        <canvas id="leaderboardChart"></canvas>
+      </div>
+    </section>
 
-
-     <!-- Leaderboard -->
-<div id="leaderboard" class="card hidden">
-  <h2>Live Leaderboard</h2>
-  <table class="leader-table">
-    <thead>
-      <tr>
-        <th>Rank</th>
-        <th>Reg. No.</th>
-        <th>Name</th>
-        <th>Votes</th>
-      </tr>
-    </thead>
-    <tbody id="leaderList"></tbody>
-  </table>
-
-  <!-- 🔥 Bar Chart -->
-  <div class="chart-container">
-    <canvas id="leaderboardChart"></canvas>
-  </div>
-</div>
-
+    <!-- Admin Panel -->
+    <section id="adminPanel" class="card hidden">
+      <h2>Admin Control Panel</h2>
+      <p>Current Participant: <span id="adminCurrent">None</span></p>
+      <div class="form-actions">
+        <button id="startPollBtn" class="btn btn-primary">▶️ Start Poll</button>
+        <button id="stopPollBtn" class="btn btn-secondary">⏹ Stop Poll</button>
+        <button id="nextBtn" class="btn btn-ghost">➡️ Next Participant</button>
+      </div>
+      <p id="adminMsg" class="msg"></p>
     </section>
 
     <footer class="site-footer">
-      Website developed & managed by 
+      Developed & managed by 
       <a href="https://github.com/anujitcj" target="_blank">anujitcj/github.com</a>
     </footer>
   </main>
-<!-- Chart.js CDN -->
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- Firebase -->
   <script type="module" src="script.js"></script>
-
-  <!-- Admin Reset (hidden by default) -->
- <!-- Admin Reset (hidden by default) -->
-<div id="adminPanel" class="hidden">
-  <button id="resetGlobalVotes" class="btn btn-ghost" style="background:rgba(255,255,255,0.05);color:var(--muted);font-size:12px;margin-top:10px;">
-    🔒 Reset Global Vote Lock (Admin)
-  </button>
-</div>
+</body>
+</html>
