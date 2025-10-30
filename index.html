@@ -13,21 +13,21 @@
       <h2 id="currentParticipant">Awaiting next performance…</h2>
     </header>
 
-    <!-- ====== Audience Voting ====== -->
+    <!-- Audience Voting Card -->
     <section id="voteSection" class="card hidden">
       <h2>Vote for Participant <span id="voteRegNumber"></span></h2>
-      <p>Rate this performance from 1 ⭐ (worst) to 5 ⭐ (best)</p>
+      <p>Rate the performance from 1 (worst) to 5 (best)</p>
       <div class="vote-options">
-        <button class="voteBtn" data-value="1">1 ⭐</button>
-        <button class="voteBtn" data-value="2">2 ⭐</button>
-        <button class="voteBtn" data-value="3">3 ⭐</button>
-        <button class="voteBtn" data-value="4">4 ⭐</button>
-        <button class="voteBtn" data-value="5">5 ⭐</button>
+        <button class="voteBtn" data-value="1">1</button>
+        <button class="voteBtn" data-value="2">2</button>
+        <button class="voteBtn" data-value="3">3</button>
+        <button class="voteBtn" data-value="4">4</button>
+        <button class="voteBtn" data-value="5">5</button>
       </div>
       <p id="voteMsg" class="msg"></p>
     </section>
 
-    <!-- ====== Leaderboard ====== -->
+    <!-- Leaderboard -->
     <section id="leaderboard" class="card hidden">
       <h2>Final Leaderboard</h2>
       <table class="leader-table">
@@ -47,16 +47,16 @@
       </div>
     </section>
 
-    <!-- ====== Admin Panel ====== -->
+    <!-- Admin Panel -->
     <section id="adminPanel" class="card hidden">
       <h2>Admin Control Panel</h2>
       <p>Current Participant: <span id="adminCurrent">None</span></p>
       <div class="form-actions">
         <button id="startPollBtn" class="btn btn-primary">▶️ Start Poll</button>
         <button id="stopPollBtn" class="btn btn-secondary">⏹ Stop Poll</button>
-        <button id="nextBtn" class="btn btn-ghost">➡️ Next</button>
-        <button id="resetBtn" class="btn btn-secondary">♻️ Reset</button>
-        <button id="showLeaderboardBtn" class="btn btn-primary">🏁 Leaderboard</button>
+        <button id="nextBtn" class="btn btn-ghost">➡️ Next Participant</button>
+        <button id="resetBtn" class="btn btn-danger">♻️ Reset All</button>
+        <button id="showLeaderboardBtn" class="btn btn-ghost">🏁 Show Leaderboard</button>
       </div>
       <p id="adminMsg" class="msg"></p>
     </section>
@@ -67,7 +67,6 @@
     </footer>
   </main>
 
-  <!-- ====== LIBRARIES ====== -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="script.js"></script>
 </body>
