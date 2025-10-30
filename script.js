@@ -34,24 +34,23 @@ const nextBtn = document.getElementById("nextBtn");
 const adminMsg = document.getElementById("adminMsg");
 const adminCurrent = document.getElementById("adminCurrent");
 
-/* ====== Admin Auth ====== */
-const ADMIN_PIN = "1989"; // change this as needed
+const ADMIN_PIN = "1989"; // change this if needed
 
-let leaderboardChart;
 let currentRegNumber = null;
 let pollActive = false;
 let nextRegNumber = 1;
+let leaderboardChart;
 
-/* ====== Admin Toggle ====== */
-document.addEventListener("keydown", async (e) => {
+/* ====== Admin Panel Toggle ====== */
+document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key.toLowerCase() === "b") {
     const pin = prompt("Enter Admin PIN:");
     if (pin === ADMIN_PIN) adminPanel.classList.toggle("hidden");
-    else alert("Incorrect PIN");
+    else alert("❌ Incorrect PIN");
   }
 });
 
-/* ====== Admin Control ====== */
+/* ====== Admin Controls ====== */
 startPollBtn.addEventListener("click", async () => {
   if (pollActive) return;
   const reg = nextRegNumber.toString().padStart(3, "0");
@@ -78,7 +77,7 @@ nextBtn.addEventListener("click", async () => {
   adminMsg.textContent = "➡️ Ready for next participant.";
 });
 
-/* ====== 🔥 Reset Everything ====== */
+/* ====== 🔁 Reset All ====== */
 const resetBtn = document.createElement("button");
 resetBtn.textContent = "🧹 Reset All (Start Fresh)";
 resetBtn.className = "btn btn-secondary";
@@ -86,22 +85,49 @@ resetBtn.style.marginTop = "15px";
 adminPanel.appendChild(resetBtn);
 
 resetBtn.addEventListener("click", async () => {
-  if (!confirm("⚠️ This will delete all data and reset polls. Continue?")) return;
-  await set(ref(db, "participants"), {});   // Clear all scores
-  await set(ref(db, "activePoll"), {});     // Reset active poll
+  if (!confirm("⚠️ This will delete all votes and reset everything. Continue?")) return;
+  await set(ref(db, "participants"), {});   // wipe scores
+  await set(ref(db, "activePoll"), {});     // reset current poll
+  await set(ref(db, "showLeaderboard"), false); // hide leaderboard
   nextRegNumber = 1;
   pollActive = false;
   currentRegNumber = null;
   adminCurrent.textContent = "None";
-  adminMsg.textContent = "✅ System reset to 001. All data cleared.";
+  adminMsg.textContent = "✅ System reset. Ready from 001.";
 
-  // Clear all local votes from this device
   Object.keys(localStorage)
     .filter(k => k.startsWith("voted_"))
     .forEach(k => localStorage.removeItem(k));
 });
 
-/* ====== Live Poll Sync ====== */
+/* ====== 🏁 Show / Hide Leaderboard ====== */
+const revealBtn = document.createElement("button");
+revealBtn.textContent = "🏁 Show Leaderboard (Final Results)";
+revealBtn.className = "btn btn-primary";
+revealBtn.style.marginTop = "15px";
+adminPanel.appendChild(revealBtn);
+
+const hideRevealBtn = document.createElement("button");
+hideRevealBtn.textContent = "🙈 Hide Leaderboard";
+hideRevealBtn.className = "btn btn-secondary hidden";
+hideRevealBtn.style.marginTop = "8px";
+adminPanel.appendChild(hideRevealBtn);
+
+revealBtn.addEventListener("click", async () => {
+  await set(ref(db, "showLeaderboard"), true);
+  revealBtn.classList.add("hidden");
+  hideRevealBtn.classList.remove("hidden");
+  adminMsg.textContent = "📊 Leaderboard shown to everyone!";
+});
+
+hideRevealBtn.addEventListener("click", async () => {
+  await set(ref(db, "showLeaderboard"), false);
+  revealBtn.classList.remove("hidden");
+  hideRevealBtn.classList.add("hidden");
+  adminMsg.textContent = "🙈 Leaderboard hidden.";
+});
+
+/* ====== Firebase Listeners ====== */
 onValue(ref(db, "activePoll"), (snapshot) => {
   if (!snapshot.exists()) {
     voteSection.classList.add("hidden");
@@ -117,6 +143,19 @@ onValue(ref(db, "activePoll"), (snapshot) => {
   } else {
     voteSection.classList.add("hidden");
     currentParticipant.textContent = `Poll closed for ${data.regNumber}`;
+  }
+});
+
+onValue(ref(db, "showLeaderboard"), (snapshot) => {
+  const show = snapshot.exists() && snapshot.val() === true;
+  const chartContainer = document.getElementById("leaderboardContainer");
+  if (show) {
+    voteSection.classList.add("hidden");
+    currentParticipant.textContent = "🏁 Final Results!";
+    leaderboard.classList.remove("hidden");
+    chartContainer.scrollIntoView({ behavior: "smooth" });
+  } else {
+    leaderboard.classList.add("hidden");
   }
 });
 
@@ -155,7 +194,7 @@ voteBtns.forEach(btn => {
 onValue(ref(db, "participants"), (snapshot) => {
   leaderList.innerHTML = "";
   if (!snapshot.exists()) {
-    leaderList.innerHTML = `<tr><td colspan="4" style="color:var(--muted);">No votes yet.</td></tr>`;
+    leaderList.innerHTML = `<tr><td colspan="4">No votes yet.</td></tr>`;
     return;
   }
 
@@ -180,19 +219,32 @@ onValue(ref(db, "participants"), (snapshot) => {
 function updateChart(data) {
   const ctx = document.getElementById("leaderboardChart").getContext("2d");
   if (leaderboardChart) leaderboardChart.destroy();
+
   leaderboardChart = new Chart(ctx, {
     type: "bar",
     data: {
       labels: data.map(d => d.reg),
       datasets: [{
-        label: "Avg Rating",
-        data: data.map(d => d.avg),
-        backgroundColor: "rgba(255, 123, 0, 0.8)"
+        label: "% (Average out of 5)",
+        data: data.map(d => ((d.avg || 0) / 5 * 100).toFixed(1)),
+        backgroundColor: data.map((d, i) =>
+          i === 0 ? "rgba(255, 215, 0, 0.9)" : // 🥇 gold
+          i === 1 ? "rgba(192,192,192,0.9)" : // 🥈 silver
+          i === 2 ? "rgba(205,127,50,0.9)" : // 🥉 bronze
+          "rgba(255,140,0,0.7)"
+        )
       }]
     },
     options: {
       plugins: { legend: { display: false } },
-      scales: { y: { beginAtZero: true, max: 5 } }
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          title: { display: true, text: "%" }
+        }
+      },
+      animation: { duration: 1200, easing: "easeOutBounce" }
     }
   });
 }
