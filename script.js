@@ -20,8 +20,8 @@ const db = getDatabase(app);
 const voteSection = document.getElementById("voteSection");
 const leaderboardSection = document.getElementById("leaderboard");
 const resultSection = document.getElementById("resultSection");
-const adminPanel = document.getElementById("adminPanel");
 const currentParticipant = document.getElementById("currentParticipant");
+const adminPanel = document.getElementById("adminPanel");
 const voteBtns = document.querySelectorAll(".voteBtn");
 const voteMsg = document.getElementById("voteMsg");
 const voteRegNumber = document.getElementById("voteRegNumber");
@@ -41,7 +41,6 @@ let pollActive = false;
 let adminMode = false;
 const MAX_PARTICIPANTS = 30;
 let resultChart;
-let chartDrawnFor = null;
 
 /* ====== Admin PIN (Ctrl + B) ====== */
 document.addEventListener("keydown", e => {
@@ -51,9 +50,7 @@ document.addEventListener("keydown", e => {
       adminMode = true;
       adminPanel.classList.remove("hidden");
       alert("✅ Admin mode activated!");
-    } else {
-      alert("❌ Wrong PIN");
-    }
+    } else alert("❌ Wrong PIN");
   }
 });
 
@@ -61,7 +58,6 @@ document.addEventListener("keydown", e => {
 startPollBtn.onclick = async () => {
   if (!adminMode) return;
   pollActive = true;
-  chartDrawnFor = null;
   const number = currentNum.toString().padStart(3, "0");
   voteSection.classList.remove("hidden");
   leaderboardSection.classList.add("hidden");
@@ -91,15 +87,13 @@ nextBtn.onclick = () => {
     currentNum++;
     resultSection.classList.add("hidden");
     startPollBtn.click();
-  } else {
-    adminMsg.textContent = "All participants completed.";
-  }
+  } else adminMsg.textContent = "All participants completed.";
 };
 
 /* ====== Reset All ====== */
 resetBtn.onclick = async () => {
   if (!adminMode) return;
-  if (confirm("⚠️ Reset EVERYTHING (votes, leaderboard & poll progress)?")) {
+  if (confirm("⚠️ Reset EVERYTHING (votes, leaderboard & progress)?")) {
     await remove(ref(db, "votes"));
     await remove(ref(db, "current"));
     await set(ref(db, "leaderboardVisible"), false);
@@ -111,8 +105,7 @@ resetBtn.onclick = async () => {
     voteSection.classList.add("hidden");
     resultSection.classList.add("hidden");
     leaderboardSection.classList.add("hidden");
-    adminMsg.textContent = "✅ All data reset successfully.";
-    alert("All votes and data cleared!");
+    adminMsg.textContent = "✅ All data reset.";
   }
 };
 
@@ -123,20 +116,17 @@ voteBtns.forEach(btn => {
       voteMsg.textContent = "⛔ Poll not active right now.";
       return;
     }
-
     const num = currentNum.toString().padStart(3, "0");
     if (localStorage.getItem(`voted_${num}`)) {
-      voteMsg.textContent = "⚠️ You’ve already voted for this participant.";
+      voteMsg.textContent = "⚠️ You’ve already voted.";
       return;
     }
-
     const value = Number(btn.dataset.value);
     const voteRef = ref(db, `votes/${num}/ratings/${value}`);
     const snap = await get(voteRef);
     const count = snap.exists() ? snap.val() + 1 : 1;
     await set(voteRef, count);
     localStorage.setItem(`voted_${num}`, "true");
-
     voteMsg.textContent = "✅ Vote submitted!";
     setTimeout(() => (voteMsg.textContent = ""), 1500);
   };
@@ -145,9 +135,8 @@ voteBtns.forEach(btn => {
 /* ====== Leaderboard ====== */
 showLeaderboardBtn.onclick = async () => {
   if (!adminMode) return;
-  await set(ref(db, "leaderboardVisible"), true); // visible for all viewers
-  adminPanel.classList.add("hidden");
-  adminMsg.textContent = "📊 Leaderboard displayed to all viewers.";
+  await set(ref(db, "leaderboardVisible"), true);
+  adminMsg.textContent = "📊 Leaderboard visible to all.";
   updateLeaderboard();
 };
 
@@ -157,117 +146,73 @@ function updateLeaderboard() {
     const data = snapshot.val() || {};
     const results = Object.entries(data).map(([id, v]) => {
       const ratings = v.ratings || {};
-      const totalVotes = Object.values(ratings).reduce((a, b) => a + b, 0);
-      const avg =
-        totalVotes > 0
-          ? (
-              Object.entries(ratings).reduce(
-                (sum, [key, val]) => sum + key * val,
-                0
-              ) / totalVotes
-            ).toFixed(2)
-          : 0;
-      return { id, totalVotes, avg };
+      const total = Object.values(ratings).reduce((a, b) => a + b, 0);
+      const pct = [1,2,3,4,5].map(n => ((ratings[n] || 0) / (total || 1) * 100).toFixed(0));
+      return { id, total, pct };
     });
-
-    results.sort((a, b) => b.avg - a.avg);
-    leaderList.innerHTML = results
-      .map(
-        (r, i) => `
+    results.sort((a, b) => b.total - a.total);
+    leaderList.innerHTML = results.map((r, i) => `
       <tr>
-        <td>${i + 1}</td>
-        <td>${r.id}</td>
-        <td>${r.avg}</td>
-        <td>${r.totalVotes}</td>
-      </tr>`
-      )
-      .join("");
+        <td>${i+1}</td><td>${r.id}</td><td>${r.total}</td>
+        ${r.pct.map(p => `<td>${p}%</td>`).join("")}
+      </tr>
+    `).join("");
   });
 }
 
-/* ====== Show Participant Result Chart (Fixed) ====== */
+/* ====== Result Chart ====== */
 async function showResultChart(num) {
   const number = num.toString().padStart(3, "0");
-
-  // prevent duplicate chart rendering
-  if (chartDrawnFor === number) return;
-  chartDrawnFor = number;
-
   resultRegNumber.textContent = number;
   resultSection.classList.remove("hidden");
 
   const snap = await get(ref(db, `votes/${number}/ratings`));
   const ratings = snap.exists() ? snap.val() : {};
-  const total = Object.values(ratings).reduce((a, b) => a + b, 0);
-  const percentages = [1, 2, 3, 4, 5].map(
-    n => ((ratings[n] || 0) / (total || 1) * 100).toFixed(1)
-  );
+  const total = Object.values(ratings).reduce((a,b)=>a+b,0);
+  const percentages = [1,2,3,4,5].map(n => ((ratings[n]||0)/(total||1)*100).toFixed(1));
 
   const ctx = document.getElementById("resultChart").getContext("2d");
-  if (resultChart && typeof resultChart.destroy === "function") {
-    resultChart.destroy();
-  }
-
+  if (resultChart) resultChart.destroy();
   resultChart = new Chart(ctx, {
     type: "bar",
     data: {
-      labels: ["1", "2", "3", "4", "5"],
-      datasets: [
-        {
-          label: "Vote % Distribution",
-          data: percentages,
-          backgroundColor: [
-            "#ff6347",
-            "#ffa500",
-            "#ffd700",
-            "#adff2f",
-            "#32cd32"
-          ]
-        }
-      ]
+      labels: ["1","2","3","4","5"],
+      datasets: [{
+        label: "Vote % Distribution",
+        data: percentages,
+        backgroundColor: ["#ff6347","#ffa500","#ffd700","#adff2f","#32cd32"]
+      }]
     },
     options: {
       indexAxis: "y",
-      animation: { duration: 500 },
-      scales: {
-        x: {
-          beginAtZero: true,
-          max: 100,
-          title: { display: true, text: "Percentage (%)" }
-        },
-        y: { title: { display: true, text: "Ratings" } }
-      },
-      plugins: { legend: { display: false } },
+      maintainAspectRatio: true, /* 🔥 fix endless resize */
       responsive: true,
-      maintainAspectRatio: false
+      scales: {
+        x: { beginAtZero: true, max: 100, title: { display: true, text: "Percentage (%)" } },
+        y: { title: { display: true, text: "Rating" } }
+      },
+      plugins: { legend: { display: false } }
     }
   });
 }
 
-/* ====== Sync Audience View ====== */
+/* ====== Sync Audience ====== */
 onValue(ref(db, "current"), async snap => {
   const val = snap.val();
   if (!val) return;
   currentNum = val.number;
-
   if (val.active) {
-    // voting mode
-    chartDrawnFor = null;
+    voteSection.classList.remove("hidden");
     resultSection.classList.add("hidden");
     leaderboardSection.classList.add("hidden");
-    voteSection.classList.remove("hidden");
-
-    const num = val.number.toString().padStart(3, "0");
+    const num = val.number.toString().padStart(3,"0");
     voteRegNumber.textContent = num;
     currentParticipant.textContent = `Participant ${num}`;
     pollActive = true;
   } else {
-    // result mode
     pollActive = false;
     voteSection.classList.add("hidden");
-    currentParticipant.textContent = `Showing results for ${val.number
-      .toString()
-      .padStart(3, "0")}`;
+    currentParticipant.textContent = `Showing results for ${val.number.toString().padStart(3,"0")}`;
     await showResultChart(val.number);
   }
 });
