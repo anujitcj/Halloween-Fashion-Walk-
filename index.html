@@ -3,34 +3,37 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>SSMRV Fashion Walk — Live Voting</title>
+  <title>SSMRV — Halloween Fashion Walk 2025 (Live Voting)</title>
   <link rel="stylesheet" href="style.css" />
+  <!-- small inline helper so it works immediately -->
+  <style>
+    .hidden{display:none!important}
+    canvas{width:100% !important; height:280px !important}
+  </style>
 </head>
 <body>
   <main class="wrap">
     <header class="topbar">
       <div>
-        <h1>SSMRV Halloween Fashion Walk 2025</h1>
+        <h1>Halloween Costume Carnival 2025</h1>
         <p id="currentParticipant" class="muted">Awaiting next performance…</p>
       </div>
-      <div class="header-actions">
-        <button id="openLeaderboard" class="btn small ghost">Leaderboard</button>
-      </div>
+      <div class="hint muted">Admin: Ctrl + B</div>
     </header>
 
-    <!-- VOTING CARD -->
+    <!-- Live voting card -->
     <section id="voteCard" class="card hidden">
       <div class="card-head">
         <h2>Vote — Participant <span id="voteReg">---</span></h2>
-        <p class="muted small">Rate 1 (worst) → 5 (best)</p>
+        <p class="muted">Choose 1 (worst) → 5 (best). One vote per device / participant.</p>
       </div>
 
       <div class="vote-row">
-        <button class="voteBtn" data-val="1">1 ★</button>
-        <button class="voteBtn" data-val="2">2 ★</button>
-        <button class="voteBtn" data-val="3">3 ★</button>
-        <button class="voteBtn" data-val="4">4 ★</button>
-        <button class="voteBtn" data-val="5">5 ★</button>
+        <button class="voteBtn" data-value="1">1 ⭐</button>
+        <button class="voteBtn" data-value="2">2 ⭐</button>
+        <button class="voteBtn" data-value="3">3 ⭐</button>
+        <button class="voteBtn" data-value="4">4 ⭐</button>
+        <button class="voteBtn" data-value="5">5 ⭐</button>
       </div>
 
       <p id="voteMsg" class="msg"></p>
@@ -40,28 +43,50 @@
       </div>
     </section>
 
-    <!-- LEADERBOARD CARD -->
-    <section id="leaderCard" class="card hidden">
-      <div class="card-head">
-        <h2>Final Leaderboard</h2>
-      </div>
-
-      <div class="leader-table-wrap">
-        <table class="leader-table" aria-live="polite">
-          <thead>
-            <tr><th>Rank</th><th>Reg</th><th>Avg</th><th>Votes</th></tr>
-          </thead>
-          <tbody id="leaderBody"></tbody>
-        </table>
-      </div>
+    <!-- Leaderboard (final/results) -->
+    <section id="leaderboardCard" class="card hidden">
+      <h2>Final Leaderboard</h2>
+      <table class="leader-table" aria-live="polite">
+        <thead>
+          <tr><th>Rank</th><th>Reg</th><th>Avg</th><th>Votes</th></tr>
+        </thead>
+        <tbody id="leaderList"></tbody>
+      </table>
 
       <div class="chart-wrap">
-        <canvas id="leaderChart"></canvas>
-      </div>
-      <div style="text-align:center;margin-top:12px">
-        <button id="backFromLeaderboard" class="btn small">Back</button>
+        <canvas id="leaderboardChart"></canvas>
       </div>
     </section>
 
-    <!-- ADMIN PANEL -->
-    <aside id="adminPanel" class="admin-panel hidden"
+    <!-- Admin panel (hidden) -->
+    <aside id="adminPanel" class="admin card hidden" aria-hidden="true">
+      <h3>Admin Controls</h3>
+      <div class="admin-row">
+        <div>Current: <strong id="adminCurrent">—</strong></div>
+        <div class="muted small">Use Ctrl + B → enter PIN</div>
+      </div>
+
+      <div class="admin-actions">
+        <button id="startBtn" class="btn primary">▶ Start</button>
+        <button id="stopBtn" class="btn">⏹ Stop</button>
+        <button id="nextBtn" class="btn">➡ Next</button>
+      </div>
+
+      <div class="admin-actions" style="margin-top:10px">
+        <button id="resetBtn" class="btn warn">♻ Reset All</button>
+        <button id="showBtn" class="btn primary">🏁 Show Leaderboard</button>
+        <button id="hideBtn" class="btn" style="display:none">🙈 Hide Leaderboard</button>
+      </div>
+
+      <p id="adminMsg" class="msg"></p>
+    </aside>
+
+    <footer class="foot">Website managed by <a href="https://github.com/anujitcj" target="_blank">anujitcj</a></footer>
+  </main>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- main script (module) -->
+  <script type="module" src="script.js"></script>
+</body>
+</html>
