@@ -1,9 +1,16 @@
-/* ====== Firebase (v12.5.0 modular) ====== */
+// ====== Firebase Setup ======
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-app.js";
-import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-analytics.js";
-import { getDatabase, ref, set, get, update, onValue, remove } from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
+import {
+  getDatabase,
+  ref,
+  set,
+  update,
+  get,
+  onValue,
+  remove,
+} from "https://www.gstatic.com/firebasejs/12.5.0/firebase-database.js";
 
-/* ====== Firebase Config ====== */
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyCF-3Zu4tuhrrhH9PTx6-pfyJDLszRIqOk",
   authDomain: "halloween-fashion-walk.firebaseapp.com",
@@ -15,40 +22,37 @@ const firebaseConfig = {
   measurementId: "G-YWWSQ63KN5"
 };
 
-/* ====== Initialize Firebase ====== */
+// Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const analytics = getAnalytics(app);
 const db = getDatabase(app);
 
-/* ====== Elements ====== */
+// ====== DOM Elements ======
 const voteSection = document.getElementById("voteSection");
-const leaderboardSection = document.getElementById("leaderboard");
-const adminPanel = document.getElementById("adminPanel");
-const currentParticipant = document.getElementById("currentParticipant");
-const voteBtns = document.querySelectorAll(".voteBtn");
-const voteMsg = document.getElementById("voteMsg");
 const voteRegNumber = document.getElementById("voteRegNumber");
-const leaderList = document.getElementById("leaderList");
+const voteMsg = document.getElementById("voteMsg");
+const leaderboardBody = document.getElementById("leaderList");
+const currentParticipantDisplay = document.getElementById("currentParticipant");
+
+const adminPanel = document.getElementById("adminPanel");
+const adminMsg = document.getElementById("adminMsg");
+const adminCurrent = document.getElementById("adminCurrent");
 
 const startPollBtn = document.getElementById("startPollBtn");
 const stopPollBtn = document.getElementById("stopPollBtn");
 const nextBtn = document.getElementById("nextBtn");
-const resetBtn = document.getElementById("resetBtn");
-const showLeaderboardBtn = document.getElementById("showLeaderboardBtn");
-const adminMsg = document.getElementById("adminMsg");
 
-let currentNum = 1;
-let pollActive = false;
-let adminMode = false;
-const MAX_PARTICIPANTS = 30;
+// ====== Globals ======
+let currentParticipant = null;
+let currentNumber = 1;
+const maxParticipants = 30;
+const adminPin = "1234";
 
-/* ====== Admin PIN (Ctrl + B) ====== */
-document.addEventListener("keydown", e => {
+// ====== Admin Mode Shortcut ======
+document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key.toLowerCase() === "b") {
     const pin = prompt("Enter Admin PIN:");
-    if (pin === "1234") {
-      adminMode = true;
-      adminPanel.classList.remove("hidden");
+    if (pin === adminPin) {
+      adminPanel.classList.toggle("hidden");
       alert("✅ Admin mode activated!");
     } else {
       alert("❌ Wrong PIN");
@@ -56,115 +60,120 @@ document.addEventListener("keydown", e => {
   }
 });
 
-/* ====== Start Poll ====== */
-startPollBtn.onclick = async () => {
-  if (!adminMode) return;
-  pollActive = true;
-  voteSection.classList.remove("hidden");
-  leaderboardSection.classList.add("hidden");
-
-  const number = currentNum.toString().padStart(3, "0");
-  voteRegNumber.textContent = number;
-  currentParticipant.textContent = `Participant ${number}`;
-
-  await set(ref(db, "current"), { active: true, number: currentNum });
-  adminMsg.textContent = `Poll started for ${number}`;
-};
-
-/* ====== Stop Poll ====== */
-stopPollBtn.onclick = async () => {
-  if (!adminMode) return;
-  pollActive = false;
-  await update(ref(db, "current"), { active: false });
-  voteSection.classList.add("hidden");
-  adminMsg.textContent = "Poll stopped.";
-};
-
-/* ====== Next Participant ====== */
-nextBtn.onclick = () => {
-  if (!adminMode) return;
-  if (currentNum < MAX_PARTICIPANTS) {
-    currentNum++;
-    adminMsg.textContent = `Moved to ${currentNum.toString().padStart(3, "0")}`;
-    startPollBtn.click();
-  } else {
-    adminMsg.textContent = "All participants completed.";
+// ====== Start Poll ======
+startPollBtn.addEventListener("click", () => {
+  if (!currentParticipant) {
+    alert("No participant selected!");
+    return;
   }
-};
 
-/* ====== Reset All ====== */
-resetBtn.onclick = async () => {
-  if (!adminMode) return;
-  if (confirm("⚠️ Reset everything (votes & progress)?")) {
-    await remove(ref(db));
-    currentNum = 1;
-    adminMsg.textContent = "✅ All data reset.";
-  }
-};
-
-/* ====== Audience Vote Buttons ====== */
-voteBtns.forEach(btn => {
-  btn.onclick = async () => {
-    if (!pollActive) {
-      voteMsg.textContent = "⛔ Poll not active right now.";
-      return;
-    }
-    const value = Number(btn.dataset.value);
-    const num = currentNum.toString().padStart(3, "0");
-    const snap = await get(ref(db, `votes/${num}`));
-    let data = snap.exists() ? snap.val() : { total: 0, count: 0 };
-    data.total += value;
-    data.count += 1;
-    await set(ref(db, `votes/${num}`), data);
-    voteMsg.textContent = "✅ Vote submitted!";
-    setTimeout(() => (voteMsg.textContent = ""), 1500);
-  };
+  set(ref(db, "activePoll"), {
+    id: currentParticipant,
+    active: true,
+  });
+  adminMsg.textContent = `Poll started for ${currentParticipant}`;
 });
 
-/* ====== Show Leaderboard ====== */
-showLeaderboardBtn.onclick = async () => {
-  leaderboardSection.classList.remove("hidden");
-  adminPanel.classList.add("hidden");
-  updateLeaderboard();
-};
+// ====== Stop Poll ======
+stopPollBtn.addEventListener("click", () => {
+  update(ref(db, "activePoll"), { active: false });
+  adminMsg.textContent = "Poll stopped.";
+});
 
-/* ====== Real-time Leaderboard ====== */
-function updateLeaderboard() {
-  onValue(ref(db, "votes"), snapshot => {
-    leaderList.innerHTML = "";
-    const data = snapshot.val() || {};
-    const arr = Object.entries(data).map(([id, v]) => ({
-      id,
-      avg: v.count ? (v.total / v.count).toFixed(2) : "0.00",
-      votes: v.count || 0
-    }));
-    arr.sort((a, b) => b.avg - a.avg);
+// ====== Next Participant ======
+nextBtn.addEventListener("click", () => {
+  if (currentNumber < maxParticipants) {
+    currentNumber++;
+    currentParticipant = currentNumber.toString().padStart(3, "0");
+    adminCurrent.textContent = currentParticipant;
+    currentParticipantDisplay.textContent = `Participant ${currentParticipant}`;
+  } else {
+    alert("All participants done!");
+  }
+});
 
-    leaderList.innerHTML = arr
-      .map(
-        (p, i) => `
-        <tr>
-          <td>${i + 1}</td>
-          <td>${p.id}</td>
-          <td>${p.avg}</td>
-          <td>${p.votes}</td>
-        </tr>`
-      )
-      .join("");
-  });
+// ====== Reset Everything ======
+function resetAll() {
+  if (confirm("⚠️ This will clear all votes and reset everything. Continue?")) {
+    remove(ref(db, "votes"));
+    remove(ref(db, "activePoll"));
+    currentNumber = 1;
+    currentParticipant = "001";
+    adminCurrent.textContent = "None";
+    adminMsg.textContent = "✅ All data cleared.";
+    alert("Reset complete.");
+  }
 }
 
-/* ====== Sync Audience View ====== */
-onValue(ref(db, "current"), snap => {
-  const val = snap.val();
-  if (!val || !val.active) {
-    voteSection.classList.add("hidden");
-    currentParticipant.textContent = "Awaiting next performance…";
-  } else {
-    voteSection.classList.remove("hidden");
-    voteRegNumber.textContent = val.number.toString().padStart(3, "0");
-    currentParticipant.textContent = `Participant ${val.number
-      .toString()
-      .padStart(3, "0")}`;
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key.toLowerCase() === "r") {
+    resetAll();
   }
+});
+
+// ====== Live Poll Watcher (For All Audience Devices) ======
+onValue(ref(db, "activePoll"), (snapshot) => {
+  const data = snapshot.val();
+  if (data && data.active) {
+    voteSection.classList.remove("hidden");
+    voteRegNumber.textContent = data.id;
+    currentParticipantDisplay.textContent = `Now Voting: ${data.id}`;
+    voteMsg.textContent = "";
+  } else {
+    voteSection.classList.add("hidden");
+    voteMsg.textContent = "Poll not active right now";
+  }
+});
+
+// ====== Voting Buttons ======
+document.querySelectorAll(".voteBtn").forEach((btn) => {
+  btn.addEventListener("click", async () => {
+    const value = parseInt(btn.dataset.value);
+    const pollSnap = await get(ref(db, "activePoll"));
+    const poll = pollSnap.val();
+
+    if (!poll || !poll.active) {
+      voteMsg.textContent = "Poll not active right now";
+      return;
+    }
+
+    const participantId = poll.id;
+    const voteRef = ref(db, `votes/${participantId}`);
+
+    const currentVotes = (await get(voteRef)).val() || {};
+    const totalVotes = Object.keys(currentVotes).length + 1;
+
+    const newVote = { value };
+    currentVotes[`v${totalVotes}`] = newVote;
+
+    await set(voteRef, currentVotes);
+    voteMsg.textContent = `✅ Your vote for ${participantId} has been recorded!`;
+  });
+});
+
+// ====== Leaderboard Updater ======
+onValue(ref(db, "votes"), (snapshot) => {
+  const data = snapshot.val();
+  leaderboardBody.innerHTML = "";
+
+  if (!data) return;
+
+  const results = Object.entries(data).map(([id, votes]) => {
+    const arr = Object.values(votes).map(v => v.value);
+    const avg = arr.reduce((a, b) => a + b, 0) / arr.length;
+    return { id, avg: avg.toFixed(2), count: arr.length };
+  });
+
+  results.sort((a, b) => b.avg - a.avg);
+
+  results.forEach((res, i) => {
+    const row = document.createElement("tr");
+    row.innerHTML = `
+      <td>${i + 1}</td>
+      <td>${res.id}</td>
+      <td>${res.avg}</td>
+      <td>${res.count}</td>
+    `;
+    leaderboardBody.appendChild(row);
+  });
 });
