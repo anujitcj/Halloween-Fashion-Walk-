@@ -13,7 +13,7 @@
       <h2 id="currentParticipant">Awaiting next performance…</h2>
     </header>
 
-    <!-- Audience Voting Card -->
+    <!-- Audience Voting -->
     <section id="voteSection" class="card hidden">
       <h2>Vote for Participant <span id="voteRegNumber"></span></h2>
       <p>Rate the performance from 1 (worst) to 5 (best)</p>
@@ -27,10 +27,12 @@
       <p id="voteMsg" class="msg"></p>
     </section>
 
-    <!-- Result Bar Graph -->
+    <!-- Result Chart -->
     <section id="resultSection" class="card hidden">
       <h2>Results for Participant <span id="resultRegNumber"></span></h2>
-      <canvas id="resultChart"></canvas>
+      <div class="chart-container">
+        <canvas id="resultChart"></canvas>
+      </div>
     </section>
 
     <!-- Leaderboard -->
@@ -53,7 +55,7 @@
       </table>
     </section>
 
-    <!-- Admin Panel -->
+    <!-- Admin -->
     <section id="adminPanel" class="card hidden">
       <h2>Admin Control Panel</h2>
       <p>Current Participant: <span id="adminCurrent">None</span></p>
