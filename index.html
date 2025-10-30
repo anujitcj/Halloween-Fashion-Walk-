@@ -6,16 +6,97 @@
   <title>SSMRV Halloween Fashion Walk 2025 — Live Voting</title>
   <link rel="stylesheet" href="style.css" />
   <style>
+    body {
+      font-family: "Poppins", sans-serif;
+      background: radial-gradient(circle at top left, #1a0a00 20%, #000);
+      color: #fff;
+      text-align: center;
+      margin: 0;
+    }
+    .site {
+      padding: 1rem;
+    }
+    .hero h1 {
+      color: #ff7b00;
+      text-shadow: 0 0 10px #ff7b00;
+      margin-bottom: 0.2rem;
+    }
+    .hero h2 {
+      color: #ccc;
+      font-weight: 400;
+    }
+    .card {
+      background: rgba(30, 30, 30, 0.9);
+      border: 1px solid #ff7b00;
+      border-radius: 16px;
+      box-shadow: 0 0 15px rgba(255,123,0,0.4);
+      margin: 1rem auto;
+      padding: 1.5rem;
+      max-width: 650px;
+    }
+    .vote-options button {
+      margin: 6px;
+      font-size: 1.2rem;
+      background: #ff7b00;
+      border: none;
+      color: #000;
+      border-radius: 10px;
+      padding: 10px 18px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    .vote-options button:hover {
+      transform: scale(1.1);
+      background: #ffa34d;
+    }
+    .msg {
+      color: #ff7b00;
+      margin-top: 10px;
+      font-size: 0.95rem;
+    }
     .chart-container {
       width: 100%;
-      max-width: 650px;
+      max-width: 600px;
       margin: 20px auto;
     }
     canvas {
       width: 100% !important;
-      height: 320px !important;
+      height: 300px !important;
     }
-    .hidden { display: none; }
+    .leader-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: rgba(255,255,255,0.05);
+      color: #fff;
+      margin-top: 10px;
+    }
+    .leader-table th {
+      background: #ff7b00;
+      color: #000;
+      padding: 10px;
+    }
+    .leader-table td {
+      padding: 8px;
+      border-bottom: 1px solid rgba(255,255,255,0.2);
+    }
+    .form-actions button {
+      margin: 6px;
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: none;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+    .btn-primary { background: #ff7b00; color: #000; }
+    .btn-secondary { background: #444; color: #fff; }
+    .btn-ghost { background: transparent; color: #ff7b00; border: 1px solid #ff7b00; }
+    .site-footer {
+      font-size: 0.8rem;
+      color: rgba(255,255,255,0.3);
+      margin-top: 30px;
+    }
+    .site-footer a { color: #ff7b00; text-decoration: none; }
+    .hidden { display: none !important; }
   </style>
 </head>
 <body>
@@ -26,10 +107,10 @@
       <h2 id="currentParticipant">Awaiting next performance…</h2>
     </header>
 
-    <!-- ====== AUDIENCE VOTING SECTION ====== -->
+    <!-- ====== LIVE VOTING SECTION ====== -->
     <section id="voteSection" class="card hidden">
       <h2>Vote for Participant <span id="voteRegNumber"></span></h2>
-      <p>Rate the performance from 1 (worst) to 5 (best)</p>
+      <p>Rate this performance from 1 ⭐ (worst) to 5 ⭐ (best)</p>
 
       <div class="vote-options">
         <button class="voteBtn" data-value="1">1 ⭐</button>
@@ -41,7 +122,7 @@
 
       <p id="voteMsg" class="msg"></p>
 
-      <!-- 🟠 LIVE VOTING BAR GRAPH -->
+      <!-- LIVE POLL BAR GRAPH -->
       <div class="chart-container">
         <canvas id="liveChart"></canvas>
       </div>
@@ -50,7 +131,6 @@
     <!-- ====== FINAL LEADERBOARD ====== -->
     <section id="leaderboard" class="card hidden">
       <h2>Final Leaderboard</h2>
-
       <table class="leader-table">
         <thead>
           <tr>
@@ -68,28 +148,27 @@
       </div>
     </section>
 
-    <!-- ====== ADMIN CONTROL PANEL ====== -->
+    <!-- ====== ADMIN PANEL ====== -->
     <section id="adminPanel" class="card hidden">
       <h2>Admin Control Panel</h2>
       <p>Current Participant: <span id="adminCurrent">None</span></p>
-
       <div class="form-actions">
-        <button id="startPollBtn" class="btn btn-primary">▶️ Start Poll</button>
-        <button id="stopPollBtn" class="btn btn-secondary">⏹ Stop Poll</button>
-        <button id="nextBtn" class="btn btn-ghost">➡️ Next Participant</button>
+        <button id="startPollBtn" class="btn-primary">▶️ Start Poll</button>
+        <button id="stopPollBtn" class="btn-secondary">⏹ Stop Poll</button>
+        <button id="nextBtn" class="btn-ghost">➡️ Next Participant</button>
+        <button id="resetBtn" class="btn-secondary">♻️ Reset All</button>
+        <button id="showLeaderboardBtn" class="btn-primary">🏁 Show Final Leaderboard</button>
       </div>
-
       <p id="adminMsg" class="msg"></p>
     </section>
 
-    <!-- ====== FOOTER ====== -->
     <footer class="site-footer">
       Developed & managed by 
       <a href="https://github.com/anujitcj" target="_blank">anujitcj/github.com</a>
     </footer>
   </main>
 
-  <!-- ====== SCRIPTS ====== -->
+  <!-- ====== LIBRARIES ====== -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script type="module" src="script.js"></script>
 </body>
