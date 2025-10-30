@@ -1,6 +1,6 @@
 /* ====== Firebase (v12 modular) ====== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+import { getDatabase, ref, get, set, update, onValue } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
 /* ====== Firebase Config ====== */
 const firebaseConfig = {
@@ -22,10 +22,9 @@ const db = getDatabase(app);
 const voteSection = document.getElementById("voteSection");
 const leaderboard = document.getElementById("leaderboard");
 const leaderList = document.getElementById("leaderList");
-const voteBtns = document.querySelectorAll(".voteBtn");
-const voteMsg = document.getElementById("voteMsg");
-const voteRegNumber = document.getElementById("voteRegNumber");
 const currentParticipant = document.getElementById("currentParticipant");
+const voteMsg = document.getElementById("voteMsg");
+const voteBtns = document.querySelectorAll(".voteBtn");
 
 const adminPanel = document.getElementById("adminPanel");
 const startPollBtn = document.getElementById("startPollBtn");
@@ -34,30 +33,33 @@ const nextBtn = document.getElementById("nextBtn");
 const adminMsg = document.getElementById("adminMsg");
 const adminCurrent = document.getElementById("adminCurrent");
 
+const liveChartCanvas = document.getElementById("liveChart");
+const leaderboardChartCanvas = document.getElementById("leaderboardChart");
+
 const ADMIN_PIN = "1989"; // change this if needed
 
 let currentRegNumber = null;
 let pollActive = false;
 let nextRegNumber = 1;
-let leaderboardChart;
+let liveChart, leaderboardChart;
 
-/* ====== Admin Panel Toggle ====== */
+/* ====== Admin Toggle ====== */
 document.addEventListener("keydown", (e) => {
   if (e.ctrlKey && e.key.toLowerCase() === "b") {
     const pin = prompt("Enter Admin PIN:");
     if (pin === ADMIN_PIN) adminPanel.classList.toggle("hidden");
-    else alert("❌ Incorrect PIN");
+    else alert("❌ Wrong PIN");
   }
 });
 
 /* ====== Admin Controls ====== */
 startPollBtn.addEventListener("click", async () => {
-  if (pollActive) return;
   const reg = nextRegNumber.toString().padStart(3, "0");
   currentRegNumber = reg;
   await set(ref(db, "activePoll"), { regNumber: reg, active: true });
   pollActive = true;
   adminMsg.textContent = `✅ Poll started for ${reg}`;
+  adminCurrent.textContent = reg;
 });
 
 stopPollBtn.addEventListener("click", async () => {
@@ -77,7 +79,7 @@ nextBtn.addEventListener("click", async () => {
   adminMsg.textContent = "➡️ Ready for next participant.";
 });
 
-/* ====== 🔁 Reset All ====== */
+/* ====== Reset System ====== */
 const resetBtn = document.createElement("button");
 resetBtn.textContent = "🧹 Reset All (Start Fresh)";
 resetBtn.className = "btn btn-secondary";
@@ -85,81 +87,59 @@ resetBtn.style.marginTop = "15px";
 adminPanel.appendChild(resetBtn);
 
 resetBtn.addEventListener("click", async () => {
-  if (!confirm("⚠️ This will delete all votes and reset everything. Continue?")) return;
-  await set(ref(db, "participants"), {});   // wipe scores
-  await set(ref(db, "activePoll"), {});     // reset current poll
-  await set(ref(db, "showLeaderboard"), false); // hide leaderboard
+  if (!confirm("⚠️ Reset all votes and polls?")) return;
+  await set(ref(db, "participants"), {});
+  await set(ref(db, "activePoll"), {});
+  await set(ref(db, "showLeaderboard"), false);
   nextRegNumber = 1;
   pollActive = false;
   currentRegNumber = null;
   adminCurrent.textContent = "None";
-  adminMsg.textContent = "✅ System reset. Ready from 001.";
+  adminMsg.textContent = "✅ Reset complete.";
 
   Object.keys(localStorage)
     .filter(k => k.startsWith("voted_"))
     .forEach(k => localStorage.removeItem(k));
 });
 
-/* ====== 🏁 Show / Hide Leaderboard ====== */
+/* ====== Leaderboard Toggle ====== */
 const revealBtn = document.createElement("button");
-revealBtn.textContent = "🏁 Show Leaderboard (Final Results)";
+revealBtn.textContent = "🏁 Show Final Leaderboard";
 revealBtn.className = "btn btn-primary";
 revealBtn.style.marginTop = "15px";
 adminPanel.appendChild(revealBtn);
 
-const hideRevealBtn = document.createElement("button");
-hideRevealBtn.textContent = "🙈 Hide Leaderboard";
-hideRevealBtn.className = "btn btn-secondary hidden";
-hideRevealBtn.style.marginTop = "8px";
-adminPanel.appendChild(hideRevealBtn);
-
 revealBtn.addEventListener("click", async () => {
   await set(ref(db, "showLeaderboard"), true);
-  revealBtn.classList.add("hidden");
-  hideRevealBtn.classList.remove("hidden");
-  adminMsg.textContent = "📊 Leaderboard shown to everyone!";
-});
-
-hideRevealBtn.addEventListener("click", async () => {
-  await set(ref(db, "showLeaderboard"), false);
-  revealBtn.classList.remove("hidden");
-  hideRevealBtn.classList.add("hidden");
-  adminMsg.textContent = "🙈 Leaderboard hidden.";
+  adminMsg.textContent = "📊 Final leaderboard visible to audience!";
 });
 
 /* ====== Firebase Listeners ====== */
-onValue(ref(db, "activePoll"), (snapshot) => {
-  if (!snapshot.exists()) {
+onValue(ref(db, "activePoll"), (snap) => {
+  if (!snap.exists()) {
     voteSection.classList.add("hidden");
-    currentParticipant.textContent = "Awaiting next performance…";
+    currentParticipant.textContent = "Waiting for next participant…";
     return;
   }
 
-  const data = snapshot.val();
+  const data = snap.val();
   if (data.active) {
     voteSection.classList.remove("hidden");
-    voteRegNumber.textContent = data.regNumber;
+    currentRegNumber = data.regNumber;
     currentParticipant.textContent = `Now Performing: ${data.regNumber}`;
+    showLiveChart(data.regNumber);
   } else {
     voteSection.classList.add("hidden");
     currentParticipant.textContent = `Poll closed for ${data.regNumber}`;
   }
 });
 
-onValue(ref(db, "showLeaderboard"), (snapshot) => {
-  const show = snapshot.exists() && snapshot.val() === true;
-  const chartContainer = document.getElementById("leaderboardContainer");
-  if (show) {
-    voteSection.classList.add("hidden");
-    currentParticipant.textContent = "🏁 Final Results!";
-    leaderboard.classList.remove("hidden");
-    chartContainer.scrollIntoView({ behavior: "smooth" });
-  } else {
-    leaderboard.classList.add("hidden");
-  }
+onValue(ref(db, "showLeaderboard"), (snap) => {
+  const show = snap.exists() && snap.val() === true;
+  leaderboard.classList.toggle("hidden", !show);
 });
 
-/* ====== Voting ====== */
+/* ====== Voting (1–5) ====== */
 voteBtns.forEach(btn => {
   btn.addEventListener("click", async () => {
     const val = parseInt(btn.dataset.value);
@@ -177,9 +157,9 @@ voteBtns.forEach(btn => {
 
     const pRef = ref(db, `participants/${reg}`);
     const snap = await get(pRef);
-    let data = { total: 0, count: 0 };
-    if (snap.exists()) data = snap.val();
+    let data = snap.exists() ? snap.val() : { ratings: { 1:0,2:0,3:0,4:0,5:0 }, total:0, count:0, avg:0 };
 
+    data.ratings[val] = (data.ratings[val] || 0) + 1;
     data.total += val;
     data.count += 1;
     data.avg = (data.total / data.count).toFixed(2);
@@ -190,61 +170,73 @@ voteBtns.forEach(btn => {
   });
 });
 
-/* ====== Leaderboard ====== */
-onValue(ref(db, "participants"), (snapshot) => {
+/* ====== Live Distribution Chart ====== */
+function showLiveChart(reg) {
+  const pRef = ref(db, `participants/${reg}`);
+  onValue(pRef, (snap) => {
+    if (!snap.exists()) return;
+    const data = snap.val().ratings || {1:0,2:0,3:0,4:0,5:0};
+    const totalVotes = Object.values(data).reduce((a,b)=>a+b,0) || 1;
+    const percentages = [1,2,3,4,5].map(i => ((data[i]||0)/totalVotes*100).toFixed(1));
+
+    const ctx = liveChartCanvas.getContext("2d");
+    if (liveChart) liveChart.destroy();
+
+    liveChart = new Chart(ctx, {
+      type: "bar",
+      data: {
+        labels: ["1 ⭐","2 ⭐","3 ⭐","4 ⭐","5 ⭐"],
+        datasets: [{
+          label: "% of Votes",
+          data: percentages,
+          backgroundColor: [
+            "rgba(255,50,50,0.8)",
+            "rgba(255,120,50,0.8)",
+            "rgba(255,200,50,0.8)",
+            "rgba(180,255,50,0.8)",
+            "rgba(50,255,120,0.8)"
+          ]
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero:true, max:100 } },
+        plugins: { legend:{ display:false } },
+        animation: false
+      }
+    });
+  });
+}
+
+/* ====== Final Leaderboard Chart ====== */
+onValue(ref(db, "participants"), (snap) => {
+  if (!snap.exists()) return;
+  const data = Object.entries(snap.val())
+    .map(([reg, val]) => ({ reg, avg: val.avg || 0 }))
+    .sort((a,b)=>b.avg-a.avg);
+
   leaderList.innerHTML = "";
-  if (!snapshot.exists()) {
-    leaderList.innerHTML = `<tr><td colspan="4">No votes yet.</td></tr>`;
-    return;
-  }
-
-  const data = Object.entries(snapshot.val())
-    .map(([reg, val]) => ({ reg, ...val }))
-    .sort((a, b) => (b.avg || 0) - (a.avg || 0));
-
-  data.forEach((p, i) => {
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${i + 1}</td>
-      <td>${p.reg}</td>
-      <td>${p.avg || 0}</td>
-      <td>${p.count || 0}</td>
-    `;
+  data.forEach((p,i)=>{
+    const tr=document.createElement("tr");
+    tr.innerHTML=`<td>${i+1}</td><td>${p.reg}</td><td>${p.avg}</td>`;
     leaderList.appendChild(tr);
   });
 
-  updateChart(data);
-});
-
-function updateChart(data) {
-  const ctx = document.getElementById("leaderboardChart").getContext("2d");
+  const ctx = leaderboardChartCanvas.getContext("2d");
   if (leaderboardChart) leaderboardChart.destroy();
 
   leaderboardChart = new Chart(ctx, {
-    type: "bar",
-    data: {
-      labels: data.map(d => d.reg),
-      datasets: [{
-        label: "% (Average out of 5)",
-        data: data.map(d => ((d.avg || 0) / 5 * 100).toFixed(1)),
-        backgroundColor: data.map((d, i) =>
-          i === 0 ? "rgba(255, 215, 0, 0.9)" : // 🥇 gold
-          i === 1 ? "rgba(192,192,192,0.9)" : // 🥈 silver
-          i === 2 ? "rgba(205,127,50,0.9)" : // 🥉 bronze
-          "rgba(255,140,0,0.7)"
-        )
+    type:"bar",
+    data:{
+      labels:data.map(d=>d.reg),
+      datasets:[{
+        data:data.map(d=>((d.avg/5)*100).toFixed(1)),
+        backgroundColor:"rgba(255,140,0,0.8)"
       }]
     },
-    options: {
-      plugins: { legend: { display: false } },
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 100,
-          title: { display: true, text: "%" }
-        }
-      },
-      animation: { duration: 1200, easing: "easeOutBounce" }
+    options:{
+      scales:{y:{beginAtZero:true,max:100}},
+      plugins:{legend:{display:false}},
+      animation:{duration:1000}
     }
   });
-}
+});
