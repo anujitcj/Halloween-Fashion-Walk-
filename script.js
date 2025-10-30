@@ -66,6 +66,7 @@ startPollBtn.onclick = async () => {
   currentParticipant.textContent = `Participant ${number}`;
   adminCurrent.textContent = number;
   await set(ref(db, "current"), { active: true, number: currentNum });
+  await set(ref(db, "leaderboardVisible"), false);
   adminMsg.textContent = `Poll started for ${number}`;
 };
 
@@ -76,7 +77,7 @@ stopPollBtn.onclick = async () => {
   await update(ref(db, "current"), { active: false });
   voteSection.classList.add("hidden");
   adminMsg.textContent = "Poll stopped.";
-  showResultChart(currentNum);
+  await showResultChart(currentNum);
 };
 
 /* ====== Next Participant ====== */
@@ -84,6 +85,7 @@ nextBtn.onclick = () => {
   if (!adminMode) return;
   if (currentNum < MAX_PARTICIPANTS) {
     currentNum++;
+    resultSection.classList.add("hidden");
     startPollBtn.click();
   } else {
     adminMsg.textContent = "All participants completed.";
@@ -93,15 +95,18 @@ nextBtn.onclick = () => {
 /* ====== Reset All ====== */
 resetBtn.onclick = async () => {
   if (!adminMode) return;
-  if (confirm("⚠️ Reset EVERYTHING (votes & poll progress)?")) {
+  if (confirm("⚠️ Reset EVERYTHING (votes, leaderboard & poll progress)?")) {
     await remove(ref(db, "votes"));
     await remove(ref(db, "current"));
+    await set(ref(db, "leaderboardVisible"), false);
+    localStorage.clear();
     currentNum = 1;
     pollActive = false;
     currentParticipant.textContent = "Awaiting next performance…";
     adminCurrent.textContent = "None";
     voteSection.classList.add("hidden");
     resultSection.classList.add("hidden");
+    leaderboardSection.classList.add("hidden");
     adminMsg.textContent = "✅ All data reset successfully.";
     alert("All votes and data cleared!");
   }
@@ -115,13 +120,18 @@ voteBtns.forEach(btn => {
       return;
     }
 
-    const value = Number(btn.dataset.value);
     const num = currentNum.toString().padStart(3, "0");
-    const voteRef = ref(db, `votes/${num}/ratings/${value}`);
+    if (localStorage.getItem(`voted_${num}`)) {
+      voteMsg.textContent = "⚠️ You’ve already voted for this participant.";
+      return;
+    }
 
+    const value = Number(btn.dataset.value);
+    const voteRef = ref(db, `votes/${num}/ratings/${value}`);
     const snap = await get(voteRef);
     const count = snap.exists() ? snap.val() + 1 : 1;
     await set(voteRef, count);
+    localStorage.setItem(`voted_${num}`, "true");
 
     voteMsg.textContent = "✅ Vote submitted!";
     setTimeout(() => (voteMsg.textContent = ""), 1500);
@@ -129,9 +139,11 @@ voteBtns.forEach(btn => {
 });
 
 /* ====== Leaderboard ====== */
-showLeaderboardBtn.onclick = () => {
-  leaderboardSection.classList.remove("hidden");
+showLeaderboardBtn.onclick = async () => {
+  if (!adminMode) return;
+  await set(ref(db, "leaderboardVisible"), true); // 🔥 show for all users
   adminPanel.classList.add("hidden");
+  adminMsg.textContent = "📊 Leaderboard displayed to all viewers.";
   updateLeaderboard();
 };
 
@@ -182,32 +194,54 @@ async function showResultChart(num) {
       datasets: [{
         label: "Vote % Distribution",
         data: percentages,
-        backgroundColor: "#ff7f50"
+        backgroundColor: ["#ff6347", "#ffa500", "#ffd700", "#adff2f", "#32cd32"]
       }]
     },
     options: {
+      indexAxis: "y",
       scales: {
-        y: { beginAtZero: true, max: 100, title: { display: true, text: "Percentage (%)" } },
-        x: { title: { display: true, text: "Ratings" } }
+        x: { beginAtZero: true, max: 100, title: { display: true, text: "Percentage (%)" } },
+        y: { title: { display: true, text: "Ratings" } }
       },
-      plugins: { legend: { display: false } }
+      plugins: { legend: { display: false } },
+      responsive: true,
+      maintainAspectRatio: false
     }
   });
 }
 
 /* ====== Sync Audience View ====== */
-onValue(ref(db, "current"), snap => {
+onValue(ref(db, "current"), async snap => {
   const val = snap.val();
-  if (!val || !val.active) {
-    voteSection.classList.add("hidden");
-    currentParticipant.textContent = "Awaiting next performance…";
-    pollActive = false;
-  } else {
+  if (!val) return;
+  currentNum = val.number;
+  if (val.active) {
+    resultSection.classList.add("hidden");
+    leaderboardSection.classList.add("hidden");
     voteSection.classList.remove("hidden");
     const num = val.number.toString().padStart(3, "0");
     voteRegNumber.textContent = num;
     currentParticipant.textContent = `Participant ${num}`;
     pollActive = true;
-    currentNum = val.number;
+  } else {
+    pollActive = false;
+    voteSection.classList.add("hidden");
+    currentParticipant.textContent = `Showing results for ${val.number
+      .toString()
+      .padStart(3, "0")}`;
+    await showResultChart(val.number);
+  }
+});
+
+/* ====== Sync Leaderboard Visibility ====== */
+onValue(ref(db, "leaderboardVisible"), snap => {
+  const visible = snap.val();
+  if (visible) {
+    leaderboardSection.classList.remove("hidden");
+    voteSection.classList.add("hidden");
+    resultSection.classList.add("hidden");
+    updateLeaderboard();
+  } else {
+    leaderboardSection.classList.add("hidden");
   }
 });
