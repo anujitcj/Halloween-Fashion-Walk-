@@ -95,3 +95,13 @@ body {
   color: var(--muted);
   margin-top: 40px;
 }
+.chart-container {
+  width: 100%;
+  max-width: 600px;
+  margin: 20px auto;
+}
+canvas {
+  width: 100% !important;
+  height: 300px !important;
+}
+
