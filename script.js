@@ -1,6 +1,6 @@
 /* ====== Firebase (v12 modular) ====== */
 import { initializeApp } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-app.js";
-import { getDatabase, ref, get, set, onValue, update } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
+import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/12.4.0/firebase-database.js";
 
 /* ====== Firebase Config ====== */
 const firebaseConfig = {
@@ -76,6 +76,29 @@ nextBtn.addEventListener("click", async () => {
   }
   adminCurrent.textContent = nextRegNumber.toString().padStart(3, "0");
   adminMsg.textContent = "➡️ Ready for next participant.";
+});
+
+/* ====== 🔥 Reset Everything ====== */
+const resetBtn = document.createElement("button");
+resetBtn.textContent = "🧹 Reset All (Start Fresh)";
+resetBtn.className = "btn btn-secondary";
+resetBtn.style.marginTop = "15px";
+adminPanel.appendChild(resetBtn);
+
+resetBtn.addEventListener("click", async () => {
+  if (!confirm("⚠️ This will delete all data and reset polls. Continue?")) return;
+  await set(ref(db, "participants"), {});   // Clear all scores
+  await set(ref(db, "activePoll"), {});     // Reset active poll
+  nextRegNumber = 1;
+  pollActive = false;
+  currentRegNumber = null;
+  adminCurrent.textContent = "None";
+  adminMsg.textContent = "✅ System reset to 001. All data cleared.";
+
+  // Clear all local votes from this device
+  Object.keys(localStorage)
+    .filter(k => k.startsWith("voted_"))
+    .forEach(k => localStorage.removeItem(k));
 });
 
 /* ====== Live Poll Sync ====== */
