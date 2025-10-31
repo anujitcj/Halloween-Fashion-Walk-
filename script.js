@@ -39,7 +39,7 @@ const adminCurrent = document.getElementById("adminCurrent");
 let currentNum = 1;
 let pollActive = false;
 let adminMode = false;
-const MAX_PARTICIPANTS = 30;
+const MAX_PARTICIPANTS = 100;
 let resultChart;
 
 /* ====== Admin PIN (Ctrl + B) ====== */
